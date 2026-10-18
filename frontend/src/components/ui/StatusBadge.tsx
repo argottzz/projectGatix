@@ -10,9 +10,9 @@ const map: Record<RegistrationStatus, string> = {
 };
 
 const label: Record<RegistrationStatus, string> = {
-  pending: "Pending",
-  approved: "Approved",
-  cancelled: "Cancelled",
+  pending: "Menunggu",
+  approved: "Disetujui",
+  cancelled: "Dibatalkan",
 };
 
 export function StatusBadge({ status }: { status: RegistrationStatus }) {
