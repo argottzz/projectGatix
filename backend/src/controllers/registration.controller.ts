@@ -202,17 +202,16 @@ export class RegistrationController {
         return res.status(404).json({ message: "Pendaftaran tidak ditemukan" });
       }
       const reg = rows[0];
+      const isEventOwner = reg.created_by === requester.id;
+      const isOrganizer = requester.role === "organizer";
 
-      if (requester.role === "organizer" || reg.created_by === requester.id) {
-        if (reg.created_by !== requester.id && requester.role !== "organizer") {
-          await conn.rollback();
-          return res.status(403).json({ message: "Akses ditolak." });
-        }
-        if (reg.created_by !== requester.id) {
-          await conn.rollback();
-          return res.status(403).json({ message: "Akses ditolak. Bukan event milikmu." });
-        }
-      } else {
+      // Hanya pemilik event yang boleh mengubah status bebas.
+      // User biasa hanya boleh membatalkan tiket miliknya sendiri.
+      if (!isEventOwner && isOrganizer) {
+        await conn.rollback();
+        return res.status(403).json({ message: "Akses ditolak. Bukan event milikmu." });
+      }
+      if (!isEventOwner && !isOrganizer) {
         if (reg.user_id !== requester.id || status !== "cancelled") {
           await conn.rollback();
           return res.status(403).json({ message: "Akses ditolak." });
@@ -220,10 +219,6 @@ export class RegistrationController {
       }
 
       if (status === "approved") {
-        if (requester.role !== "organizer" && reg.created_by !== requester.id) {
-          await conn.rollback();
-          return res.status(403).json({ message: "Hanya organizer yang bisa menyetujui." });
-        }
         const [[{ approved }]]: any = await conn.query(
           "SELECT COUNT(*) AS approved FROM registrations WHERE event_id = ? AND status = 'approved' AND id != ?",
           [reg.event_id, id],
