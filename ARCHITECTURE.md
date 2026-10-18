@@ -419,7 +419,7 @@ erDiagram
 ### Environment variable
 
 **Backend** (`backend/.env`, contoh di `backend/.env.example`):
-`PORT`, `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JWT_SECRET`, `JWT_EXPIRES_IN`.
+`PORT`, `CORS_ORIGIN`, `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JWT_SECRET`, `JWT_EXPIRES_IN`.
 
 **Frontend** (`frontend/.env.local`, contoh di `frontend/.env.example`):
 `NEXT_PUBLIC_API_URL` (contoh: `http://localhost:8000/api/v1`).

@@ -12,6 +12,10 @@ function required(name: string): string {
 
 export const env = {
   port: Number(process.env.PORT ?? 8000),
+  corsOrigins: (process.env.CORS_ORIGIN ?? "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   db: {
     host: process.env.DB_HOST ?? "localhost",
     user: process.env.DB_USER ?? "root",
