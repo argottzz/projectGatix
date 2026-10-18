@@ -77,7 +77,7 @@ function EditEventForm() {
           <Input label="Judul event" error={errors.title?.message} {...register("title")} />
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Deskripsi</label>
-            <textarea className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#FF6A00]" rows={4} {...register("description")} />
+            <textarea className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30" rows={4} {...register("description")} />
             {errors.description && <span className="text-xs text-[#DC2626]">{errors.description.message}</span>}
           </div>
           <Input label="Tanggal dan waktu" type="datetime-local" error={errors.date?.message} {...register("date")} />

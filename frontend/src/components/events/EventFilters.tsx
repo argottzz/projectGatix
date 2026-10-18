@@ -76,7 +76,7 @@ export function EventFilters({ initial, onSearch }: { initial: EventFilter; onSe
         <div>
           <label className="text-sm font-medium text-[#161616]">Urutkan</label>
           <select
-            className="block rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm"
+            className="block rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm outline-none focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30"
             value={`${form.sort_by}-${form.order}`}
             onChange={(e) => {
               const [sort_by, order] = e.target.value.split("-") as ["date" | "price", "asc" | "desc"];

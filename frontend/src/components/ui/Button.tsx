@@ -16,7 +16,7 @@ export function Button({ variant = "primary", loading, className, children, disa
         : "bg-white text-[#161616] border border-[#E5E7EB] hover:bg-[#F7F8FA]";
   return (
     <button
-      className={cn("rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50", styles, className)}
+      className={cn("rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A00]/40 focus-visible:ring-offset-1", styles, className)}
       disabled={disabled || loading}
       {...rest}
     >

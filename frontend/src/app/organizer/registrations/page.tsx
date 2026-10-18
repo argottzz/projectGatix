@@ -60,7 +60,7 @@ export default function OrganizerRegistrationsPage() {
       <OrganizerSidebar />
       <div className="flex flex-1 flex-col gap-4">
         <h1 className="text-2xl font-extrabold">Manajemen Pendaftaran</h1>
-        <select value={selected} onChange={(e) => setSelected(e.target.value)} className="max-w-md rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm">
+        <select value={selected} onChange={(e) => setSelected(e.target.value)} className="max-w-md rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm outline-none focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30">
           {events.map((e) => (
             <option key={e.id} value={e.id}>{e.title}</option>
           ))}
