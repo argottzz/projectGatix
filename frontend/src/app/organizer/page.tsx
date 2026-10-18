@@ -28,18 +28,20 @@ export default function OrganizerDashboard() {
         setEvents(res.data.slice(0, 5));
         setTotalEvents(res.pagination.total);
         setTotalPeserta(res.data.reduce((s, e) => s + Number(e.taken ?? 0), 0));
-        const all: PendingItem[] = [];
-        for (const e of res.data.slice(0, 10)) {
-          try {
-            const r = await listEventRegistrations(e.id);
-            for (const reg of r.data) {
-              if (reg.status === "pending") all.push({ ...reg, event_title: e.title });
+        const results = await Promise.all(
+          res.data.slice(0, 10).map(async (e) => {
+            try {
+              const r = await listEventRegistrations(e.id);
+              return r.data
+                .filter((reg) => reg.status === "pending")
+                .map((reg) => ({ ...reg, event_title: e.title }));
+            } catch {
+              // lewati event yang gagal dimuat (mis. bukan milik organizer ini)
+              return [];
             }
-          } catch {
-            // lewati event yang gagal dimuat (mis. bukan milik organizer ini)
-          }
-        }
-        setPending(all.slice(0, 5));
+          }),
+        );
+        setPending(results.flat().slice(0, 5));
       } catch {
         setEvents([]);
       }
