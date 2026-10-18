@@ -208,7 +208,7 @@ Skema zod di `validations/` (`auth.ts`, `event.ts`, `registration.ts`) **dipangg
 ### Error handling
 - Respons error standar: `{ message: string }`; khusus kegagalan validasi: `{ message: "Data tidak valid", error: [...] }`. (Endpoint auth juga menyertakan `success: false` pada sebagian respons — lihat §6.)
 - Error handler global di `app.ts` menangkap `MulterError` maupun error umum dan mengembalikannya dengan status **400** beserta `{ message }`.
-- **Tidak ada handler 404 kustom** → route tidak dikenal mengembalikan 404 default Express (bukan JSON).
+- **Route tidak dikenal** ditangani middleware 404 (dipasang setelah semua route) → `404 { message: "Endpoint tidak ditemukan" }`.
 
 ### Authentication & authorization (ringkas)
 JWT (masa berlaku `JWT_EXPIRES_IN`) + bcryptjs. Otorisasi berbasis middleware `verifyToken` + `requireRole`, ditambah pengecekan kepemilikan di controller (mis. `created_by === req.user.id`). Rincian di §8.
@@ -298,6 +298,7 @@ Autentikasi: header `Authorization: Bearer <token>`. `Auth` = wajib login; `Role
 | GET | `/api/v1/health` | Cek server hidup | Tidak |
 
 > Detail tambahan (contoh respons, catatan) tersedia di `backend/docs/API.md`.
+> Route API yang tidak terdaftar mengembalikan `404 { message: "Endpoint tidak ditemukan" }`.
 
 ---
 

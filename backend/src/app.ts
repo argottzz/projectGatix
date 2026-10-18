@@ -20,6 +20,10 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/registrations", registrationRoutes);
 
+app.use((req, res) => {
+  res.status(404).json({ message: "Endpoint tidak ditemukan" });
+});
+
 app.use(
   (
     err: any,
