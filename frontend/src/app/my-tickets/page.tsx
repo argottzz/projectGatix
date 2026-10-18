@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { myTickets } from "../../services/registration.service";
 import type { Registration, RegistrationStatus } from "../../types/registration";
 import { TicketCard } from "../../components/tickets/TicketCard";
@@ -35,10 +35,7 @@ export default function MyTicketsPage() {
     })();
   }, []);
 
-  const filtered = useMemo(
-    () => (tab === "all" ? tickets : tickets.filter((t) => t.status === tab)),
-    [tickets, tab],
-  );
+  const filtered = tab === "all" ? tickets : tickets.filter((t) => t.status === tab);
 
   return (
     <div className="flex flex-col gap-4">
