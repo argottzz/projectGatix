@@ -88,11 +88,7 @@ Dipetakan di `globals.css`:
 }
 ```
 
-⚠️ **Namun `globals.css` juga menetapkan:**
-```css
-body { font-family: Arial, Helvetica, sans-serif; }
-```
-Karena aturan `body` ini menimpa, **font yang benar-benar dirender adalah Arial/Helvetica/sans-serif**, bukan Geist (lihat §9 — inkonsistensi).
+Elemen `body` tidak menetapkan `font-family` sendiri, sehingga teks mewarisi font dari `html` yang diatur preflight Tailwind memakai `--font-sans` → `var(--font-geist-sans)`. Dengan begitu **font yang benar-benar dirender adalah Geist**.
 
 **Hierarki ukuran (class Tailwind yang dipakai aktual):**
 
