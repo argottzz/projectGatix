@@ -6,9 +6,6 @@ export interface Registration {
   user_id: number;
   status: RegistrationStatus;
   payment_proof_url: string | null;
-  payment_proof_public_id: string | null;
-  created_at?: string;
-  updated_at?: string;
   title?: string;
   date?: string;
   location?: string;
