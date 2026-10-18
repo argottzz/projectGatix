@@ -8,6 +8,7 @@ import { deleteEvent, listEvents } from "../../../services/event.service";
 import type { EventItem } from "../../../types/event";
 import { OrganizerSidebar } from "../../../components/layout/OrganizerSidebar";
 import { Button } from "../../../components/ui/Button";
+import { Loading } from "../../../components/ui/Loading";
 
 export default function OrganizerEventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -38,7 +39,7 @@ export default function OrganizerEventsPage() {
           <Link href="/organizer/events/create"><Button>Tambah event</Button></Link>
         </div>
         {loading ? (
-          <p className="text-sm text-[#737373]">Memuat...</p>
+          <Loading />
         ) : (
           <div className="flex flex-col gap-2">
             {events.map((e) => (

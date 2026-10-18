@@ -8,6 +8,7 @@ import type { Registration } from "../../../types/registration";
 import { TicketStatus } from "../../../components/tickets/TicketStatus";
 import { PaymentProofForm } from "../../../components/booking/PaymentProofForm";
 import { Button } from "../../../components/ui/Button";
+import { Loading } from "../../../components/ui/Loading";
 import { formatDate, formatPrice } from "../../../lib/utils";
 
 function TicketDetail() {
@@ -30,7 +31,7 @@ function TicketDetail() {
     load();
   }, [load]);
 
-  if (loading) return <p className="text-sm text-[#737373]">Memuat tiket...</p>;
+  if (loading) return <Loading text="Memuat tiket..." />;
   if (!ticket) return <p className="text-sm text-[#DC2626]">Tiket tidak ditemukan.</p>;
 
   return (
@@ -72,7 +73,7 @@ function TicketDetail() {
 
 export default function TicketDetailPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat tiket...</p>}>
+    <Suspense fallback={<Loading text="Memuat tiket..." />}>
       <TicketDetail />
     </Suspense>
   );

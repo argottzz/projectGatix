@@ -9,6 +9,7 @@ import type { Registration } from "../../../types/registration";
 import { OrganizerSidebar } from "../../../components/layout/OrganizerSidebar";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { Button } from "../../../components/ui/Button";
+import { Loading } from "../../../components/ui/Loading";
 
 export default function OrganizerRegistrationsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -65,7 +66,7 @@ export default function OrganizerRegistrationsPage() {
           ))}
         </select>
         {loading ? (
-          <p className="text-sm text-[#737373]">Memuat...</p>
+          <Loading />
         ) : (
           <div className="flex flex-col gap-2">
             {regs.map((r) => (

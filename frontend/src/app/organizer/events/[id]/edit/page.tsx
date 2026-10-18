@@ -10,6 +10,7 @@ import { getEvent, updateEvent } from "../../../../../services/event.service";
 import { OrganizerSidebar } from "../../../../../components/layout/OrganizerSidebar";
 import { Input } from "../../../../../components/ui/Input";
 import { Button } from "../../../../../components/ui/Button";
+import { Loading } from "../../../../../components/ui/Loading";
 
 function toLocalInput(date: string): string {
   const d = new Date(date);
@@ -96,7 +97,7 @@ function EditEventForm() {
 
 export default function EditEventPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat form...</p>}>
+    <Suspense fallback={<Loading text="Memuat form..." />}>
       <EditEventForm />
     </Suspense>
   );

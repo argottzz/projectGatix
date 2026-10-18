@@ -11,6 +11,7 @@ import type { EventItem } from "../../../types/event";
 import { useAuth } from "../../../hooks/useAuth";
 import { formatDate, formatPrice } from "../../../lib/utils";
 import { BookingSummary } from "../../../components/booking/BookingSummary";
+import { Loading } from "../../../components/ui/Loading";
 
 function EventDetail() {
   const params = useParams<{ id: string }>();
@@ -34,7 +35,7 @@ function EventDetail() {
     })();
   }, [params.id]);
 
-  if (loading) return <p className="text-sm text-[#737373]">Memuat detail event...</p>;
+  if (loading) return <Loading text="Memuat detail event..." />;
   if (!event) return <p className="text-sm text-[#DC2626]">Event tidak ditemukan.</p>;
 
   return (
@@ -94,7 +95,7 @@ function EventDetail() {
 
 export default function EventDetailPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat detail event...</p>}>
+    <Suspense fallback={<Loading text="Memuat detail event..." />}>
       <EventDetail />
     </Suspense>
   );
