@@ -192,7 +192,7 @@ Berdasarkan bukti kode (bukan asumsi):
 7. **Kuota bersifat real-time per request** — tidak ada indikator live/websocket.
 8. **`/organizer/events` memuat maksimum 50 event tanpa paginasi** (`listEvents({ limit: 50 })`).
 9. **Dashboard organizer memuat pendaftaran 10 event pertama secara berurutan** (`for ... await`), sehingga lebih lambat bila event banyak.
-10. **Klaim privasi vs implementasi:** halaman `/privacy` menyatakan "Bukti pembayaran hanya dapat dilihat oleh organizer pemilik event", tetapi URL Cloudinary bersifat publik (siapa pun yang punya URL dapat membukanya). Lihat juga `ARCHITECTURE.md` §Technical Limitations.
+10. **Akses berkas bukti pembayaran:** halaman `/privacy` menyatakan bukti hanya ditampilkan kepada pemilik tiket dan organizer, tetapi file disimpan di Cloudinary dengan URL publik — siapa pun yang memiliki tautan dapat membukanya. Perbaikan (signed/authenticated URL) dicatat sebagai rekomendasi di `ARCHITECTURE.md`.
 11. Klaim `Belum terverifikasi`: perilaku runtime penuh (termasuk transaksi kuota bersamaan) **belum diuji end-to-end** karena tidak ada test otomatis dan environment DB/Cloudinary belum dijalankan dalam proses dokumentasi ini.
 
 ---

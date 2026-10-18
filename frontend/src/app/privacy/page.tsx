@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <p className="mt-3 font-bold text-[#161616]">Penggunaan data</p>
         <ul className="mt-1 list-disc pl-5">
           <li>Data hanya dipakai untuk keperluan pendaftaran dan verifikasi tiket.</li>
-          <li>Bukti pembayaran hanya dapat dilihat oleh organizer pemilik event.</li>
+          <li>Bukti pembayaran hanya ditampilkan kepada kamu (pemilik tiket) dan organizer event terkait; berkasnya disimpan di layanan penyimpanan gambar Cloudinary.</li>
           <li>Kami tidak membagikan datamu ke pihak ketiga tanpa izin.</li>
         </ul>
       </div>

@@ -521,7 +521,7 @@ DELETE /events/:id (verifyToken + requireRole organizer)
 3. **CORS `cors()` tanpa opsi** → mengizinkan origin apa pun (nyaman untuk dev, berisiko di production).
 4. **Tidak ada 404 handler JSON** → route salah mengembalikan HTML default Express, tidak konsisten dengan format `{ message }`.
 5. **Tidak ada layer service** → logika bisnis menumpuk di controller; query SQL tersebar (sulit diuji).
-6. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Ini bertentangan dengan klaim di halaman `/privacy`.
+6. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Teks `/privacy` sudah diselaraskan (bukti hanya ditampilkan ke pemilik tiket & organizer), namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
 7. **Kredensial asli pernah ter-commit.** Nilai asli Cloudinary & `JWT_SECRET` sebelumnya ada di `backend/.env.example` dan **masih tersimpan di riwayat git**. Berkas contoh kini memakai placeholder, tetapi nilai lama perlu **dirotasi** (ganti API key/secret Cloudinary dan `JWT_SECRET`). Nilai tidak dicantumkan di dokumen ini.
 8. **Dashboard organizer memuat pendaftaran secara berurutan** (`for ... await`) untuk 10 event pertama → lambat bila data banyak.
 9. **Halaman organizer events tanpa paginasi** (`limit: 50`).
