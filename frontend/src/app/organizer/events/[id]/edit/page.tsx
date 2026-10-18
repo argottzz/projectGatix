@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -94,4 +94,10 @@ function EditEventForm() {
   );
 }
 
-export default EditEventForm;
+export default function EditEventPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat form...</p>}>
+      <EditEventForm />
+    </Suspense>
+  );
+}

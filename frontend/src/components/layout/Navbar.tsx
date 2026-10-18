@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Ticket, User as UserIcon, ChevronDown } from "lucide-react";
@@ -143,10 +143,16 @@ export function Navbar() {
           </span>
           <span className="text-lg font-extrabold tracking-tight text-[#161616]">GATIX</span>
         </Link>
-        <NavLinks />
-        <AccountMenu />
+        <Suspense fallback={null}>
+          <NavLinks />
+        </Suspense>
+        <Suspense fallback={null}>
+          <AccountMenu />
+        </Suspense>
       </div>
-      <MobileNav />
+      <Suspense fallback={null}>
+        <MobileNav />
+      </Suspense>
     </header>
   );
 }

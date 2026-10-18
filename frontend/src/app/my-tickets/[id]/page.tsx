@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { cancelRegistration, getRegistration } from "../../../services/registration.service";
@@ -70,4 +70,10 @@ function TicketDetail() {
   );
 }
 
-export default TicketDetail;
+export default function TicketDetailPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat tiket...</p>}>
+      <TicketDetail />
+    </Suspense>
+  );
+}

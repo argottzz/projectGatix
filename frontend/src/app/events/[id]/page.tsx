@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -92,4 +92,10 @@ function EventDetail() {
   );
 }
 
-export default EventDetail;
+export default function EventDetailPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-[#737373]">Memuat detail event...</p>}>
+      <EventDetail />
+    </Suspense>
+  );
+}
