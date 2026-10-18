@@ -23,12 +23,8 @@ export async function uploadPaymentProof(id: string | number, file: File): Promi
   return api(`/registrations/${id}/payment`, { method: "PATCH", auth: true, body: form });
 }
 
-export async function cancelRegistration(id: string | number): Promise<{ message: string; data: unknown }> {
-  return api(`/registrations/${id}/status`, {
-    method: "PATCH",
-    auth: true,
-    body: JSON.stringify({ status: "cancelled" }),
-  });
+export function cancelRegistration(id: string | number): Promise<{ message: string; data: unknown }> {
+  return setRegistrationStatus(id, "cancelled");
 }
 
 export async function listEventRegistrations(eventId: string | number): Promise<{ message: string; data: Registration[] }> {
