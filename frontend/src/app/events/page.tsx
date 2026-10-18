@@ -14,7 +14,13 @@ function EventsContent() {
   const urlLocation = searchParams.get("location") ?? "";
   const urlFrom = searchParams.get("date_from") ?? "";
   const urlTo = searchParams.get("date_to") ?? "";
-  const [filter, setFilter] = useState<EventFilter>({ ...EMPTY_FILTER });
+  const [filter, setFilter] = useState<EventFilter>(() => ({
+    ...EMPTY_FILTER,
+    search: urlSearch,
+    location: urlLocation,
+    date_from: urlFrom,
+    date_to: urlTo,
+  }));
   const [events, setEvents] = useState<EventItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,7 +29,14 @@ function EventsContent() {
 
   useEffect(() => {
     setPage(1);
-    setFilter((f) => ({ ...f, search: urlSearch, location: urlLocation, date_from: urlFrom, date_to: urlTo }));
+    setFilter((f) =>
+      f.search === urlSearch &&
+      f.location === urlLocation &&
+      f.date_from === urlFrom &&
+      f.date_to === urlTo
+        ? f
+        : { ...f, search: urlSearch, location: urlLocation, date_from: urlFrom, date_to: urlTo },
+    );
   }, [urlSearch, urlLocation, urlFrom, urlTo]);
 
   const load = useCallback(async (f: EventFilter, p: number) => {
