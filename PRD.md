@@ -191,9 +191,8 @@ Berdasarkan bukti kode (bukan asumsi):
 6. **Tidak ada endpoint untuk mengubah/menghapus akun** (hanya `PATCH /auth/me` untuk nama).
 7. **Kuota bersifat real-time per request** — tidak ada indikator live/websocket.
 8. **`/organizer/events` memuat maksimum 50 event tanpa paginasi** (`listEvents({ limit: 50 })`).
-9. **Dashboard organizer memuat pendaftaran 10 event pertama secara berurutan** (`for ... await`), sehingga lebih lambat bila event banyak.
-10. **Akses berkas bukti pembayaran:** halaman `/privacy` menyatakan bukti hanya ditampilkan kepada pemilik tiket dan organizer, tetapi file disimpan di Cloudinary dengan URL publik — siapa pun yang memiliki tautan dapat membukanya. Perbaikan (signed/authenticated URL) dicatat sebagai rekomendasi di `ARCHITECTURE.md`.
-11. Klaim `Belum terverifikasi`: perilaku runtime penuh (termasuk transaksi kuota bersamaan) **belum diuji end-to-end** karena tidak ada test otomatis dan environment DB/Cloudinary belum dijalankan dalam proses dokumentasi ini.
+9. **Akses berkas bukti pembayaran:** halaman `/privacy` menyatakan bukti hanya ditampilkan kepada pemilik tiket dan organizer, tetapi file disimpan di Cloudinary dengan URL publik — siapa pun yang memiliki tautan dapat membukanya. Perbaikan (signed/authenticated URL) dicatat sebagai rekomendasi di `ARCHITECTURE.md`.
+10. Klaim `Belum terverifikasi`: perilaku runtime penuh (termasuk transaksi kuota bersamaan) **belum diuji end-to-end** karena tidak ada test otomatis dan environment DB/Cloudinary belum dijalankan dalam proses dokumentasi ini.
 
 ---
 
@@ -213,4 +212,4 @@ Berdasarkan bukti kode (bukan asumsi):
 
 ---
 
-*Dokumen ini menggambarkan kondisi saat commit `0324a4f`. Perbarui bila fitur bisnis berubah (lihat `AGENTS.md` §Documentation Maintenance).*
+*Dokumen ini menggambarkan kondisi saat commit `e6427c6`. Perbarui bila fitur bisnis berubah (lihat `AGENTS.md` §Documentation Maintenance).*

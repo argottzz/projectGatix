@@ -518,21 +518,17 @@ DELETE /events/:id (verifyToken + requireRole organizer)
 
 1. **Skema database tidak ter-version.** Tidak ada `.sql`/migration; pemulihan/replikasi struktur bergantung pada database yang sudah ada. (Risiko tertinggi untuk onboarding & deploy.)
 2. **Token JWT disimpan di `localStorage`** → rentan terhadap XSS; tidak ada refresh token.
-3. **CORS `cors()` tanpa opsi** → mengizinkan origin apa pun (nyaman untuk dev, berisiko di production).
-4. **Tidak ada 404 handler JSON** → route salah mengembalikan HTML default Express, tidak konsisten dengan format `{ message }`.
-5. **Tidak ada layer service** → logika bisnis menumpuk di controller; query SQL tersebar (sulit diuji).
-6. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Teks `/privacy` sudah diselaraskan (bukti hanya ditampilkan ke pemilik tiket & organizer), namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
-7. **Kredensial asli pernah ter-commit.** Nilai asli Cloudinary & `JWT_SECRET` sebelumnya ada di `backend/.env.example` dan **masih tersimpan di riwayat git**. Berkas contoh kini memakai placeholder, tetapi nilai lama perlu **dirotasi** (ganti API key/secret Cloudinary dan `JWT_SECRET`). Nilai tidak dicantumkan di dokumen ini.
-8. **Dashboard organizer memuat pendaftaran secara berurutan** (`for ... await`) untuk 10 event pertama → lambat bila data banyak.
-9. **Halaman organizer events tanpa paginasi** (`limit: 50`).
-10. **Tidak ada test otomatis** (script `test` hanya placeholder) dan tidak ada CI.
-11. **Pengecekan "tanggal harus masa depan" hanya saat create**, tidak saat update.
-12. **Tidak ada validasi jenis konten dari sisi server selain multer** untuk file banner selain ekstensi/mimetype — perlu pengecekan lanjutan bila ingin lebih ketat. *(Sebagian terverifikasi: ada `fileFilter` ekstensi + mimetype.)*
+3. **Tidak ada layer service** → logika bisnis menumpuk di controller; query SQL tersebar (sulit diuji).
+4. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Teks `/privacy` sudah diselaraskan (bukti hanya ditampilkan ke pemilik tiket & organizer), namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
+5. **Kredensial asli pernah ter-commit.** Nilai asli Cloudinary & `JWT_SECRET` sebelumnya ada di `backend/.env.example` dan **masih tersimpan di riwayat git**. Berkas contoh kini memakai placeholder, tetapi nilai lama perlu **dirotasi** (ganti API key/secret Cloudinary dan `JWT_SECRET`). Nilai tidak dicantumkan di dokumen ini.
+6. **Halaman organizer events tanpa paginasi** (`limit: 50`).
+7. **Tidak ada test otomatis** (script `test` hanya placeholder) dan tidak ada CI.
+8. **Validasi jenis konten upload terbatas** pada multer `fileFilter` (ekstensi + mimetype); tidak ada pemeriksaan isi berkas lanjutan.
 
 **Potensi masalah teknis lain:** ketergantungan pada `cacheComponents`/`Suspense` pada Next 16 (mudah rusak saat refactor); `typescript@^7.0.2` perlu diverifikasi; tidak ada `.nvmrc`/`engines` sehingga versi Node tidak dipatok.
 
-> **Rekomendasi (terpisah dari kondisi aktual — jangan diterapkan tanpa persetujuan):** migration DB; pindahkan token ke httpOnly cookie + refresh token; batasi CORS ke origin frontend; tambah 404 handler JSON; hapus kredensial asli dari `.env.example` (ganti placeholder) dan rotasi kredensial yang bocor; signed URL Cloudinary; layer service untuk logika kompleks; paginasi & `Promise.all` di organizer; test otomatis + CI.
+> **Rekomendasi (terpisah dari kondisi aktual — jangan diterapkan tanpa persetujuan):** migration DB; pindahkan token ke httpOnly cookie + refresh token; **rotasi** kredensial yang pernah bocor di riwayat git; signed URL Cloudinary; layer service untuk logika kompleks; paginasi di halaman organizer; test otomatis + CI.
 
 ---
 
-*Dokumen ini mencerminkan kondisi pada commit `0324a4f`. Perbarui bila teknologi, API, database, atau alur sistem berubah (lihat `AGENTS.md` §Documentation Maintenance).*
+*Dokumen ini mencerminkan kondisi pada commit `e6427c6`. Perbarui bila teknologi, API, database, atau alur sistem berubah (lihat `AGENTS.md` §Documentation Maintenance).*

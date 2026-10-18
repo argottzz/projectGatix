@@ -147,7 +147,7 @@ Komponen yang **benar-benar ada** beserta lokasi & variasinya:
 | **Input** | `components/ui/Input.tsx` | Input teks + `label` opsional + `error` (teks merah `text-xs text-[#DC2626]`). Focus: `focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30`. |
 | **Card** | `components/ui/Card.tsx` | Kontainer putih `rounded-xl border border-[#E5E7EB] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`, terima `className`. |
 | **Loading** | `components/ui/Loading.tsx` | Spinner (`animate-spin`, border abu dengan `border-t-[#FF6A00]`) + teks (default "Memuat..."). |
-| **StatusBadge** | `components/ui/StatusBadge.tsx` | Badge status tiket (`pending`/`approved`/`cancelled`), pill `rounded-full px-2.5 py-1 text-xs font-semibold`. |
+| **StatusBadge** | `components/ui/StatusBadge.tsx` | Badge status tiket (`pending`/`approved`/`cancelled`) dengan label Indonesia (Menunggu/Disetujui/Dibatalkan), pill `rounded-full px-2.5 py-1 text-xs font-semibold`. |
 | **Navbar** | `components/layout/Navbar.tsx` | Sticky header. Berisi logo GATIX, `NavLinks` (desktop), `AccountMenu` (dropdown akun / tombol Login+Registrasi), `MobileNav`. Dropdown dibuka/tutup lewat klik luar (`mousedown` listener). |
 | **OrganizerSidebar** | `components/layout/OrganizerSidebar.tsx` | Menu organizer: Dashboard, Event Saya, Tambah Event, Pendaftaran, Profil. Item aktif `bg-[#FF6A00]/10 text-[#FF6A00]`. |
 | **Footer** | `components/layout/Footer.tsx` | 4 kolom: brand, navigasi, tentang, informasi. Latar `#F7F8FA`. |
@@ -199,10 +199,10 @@ Semua halaman dibungkus `main` global (`max-w-6xl`); halaman organizer menambahk
 | State | Perilaku aktual | Bukti |
 |---|---|---|
 | **Hover** | Link → `hover:text-[#FF6A00]`; tombol primary → `hover:bg-[#E65F00]`; danger → `hover:opacity-90`; kartu/daftar → `hover:border-[#FF6A00]` atau `hover:bg-[#F7F8FA]` | komponen terkait |
-| **Focus** | Hanya `Input` punya gaya fokus jelas: `focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30`. `Button`, `select`, `textarea` sebagian **tidak** punya ring fokus seragam | `Input.tsx`, `EventFilters.tsx` |
+| **Focus** | `Input`, `select`, dan `textarea` memakai `focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30`; `Button` memakai `focus-visible:ring-2 focus-visible:ring-[#FF6A00]/40` | `Input.tsx`, `Button.tsx`, `EventFilters.tsx` |
 | **Active (nav)** | Item sidebar/nav aktif: `bg-[#FF6A00]/10 text-[#FF6A00]` | `OrganizerSidebar.tsx`, `Navbar.tsx` |
 | **Disabled** | `disabled:opacity-50` (tombol paginasi, `Button` saat loading) | `Button.tsx`, `events/page.tsx` |
-| **Loading** | (a) `Button` menampilkan "Memproses..."; (b) komponen `Loading` (spinner); (c) sebagian halaman memakai teks polos `<p>Memuat...</p>` | `Button.tsx`, `Loading.tsx`, `organizer/events/page.tsx` |
+| **Loading** | (a) `Button` menampilkan "Memproses..."; (b) komponen `Loading` (spinner) dipakai untuk memuat event, tiket, dan halaman organizer. Dashboard `organizer` belum menampilkan indikator loading | `Button.tsx`, `Loading.tsx` |
 | **Error** | Toast (`toast.error`) di hampir semua aksi; **kartu error inline** hanya di `/`, `/events`, `/my-tickets` | `app/page.tsx`, `app/events/page.tsx`, `app/my-tickets/page.tsx` |
 | **Empty** | `EventGrid` ("Belum ada event"), `/my-tickets` ("Belum ada tiket pada tab ini"), daftar pendaftaran ("Belum ada pendaftaran.") | komponen terkait |
 | **Success** | Toast (`toast.success`) setelah login/registrasi/simpan/unggah/approve | komponen terkait |
@@ -229,24 +229,18 @@ Berdasarkan class aktual:
 **Inkonsistensi yang benar-benar ditemukan (dengan bukti):**
 
 1. **Token warna tidak dipakai.** `globals.css` mendefinisikan token (`--primary`, `--foreground`, ...) tapi komponen menulis HEX langsung (`text-[#161616]`). Mengubah token tidak berdampak visual.
-2. **Font tidak sesuai konfigurasi.** Geist dimuat dan dipetakan ke `--font-sans`, tetapi `body { font-family: Arial, ... }` menimpanya, sehingga yang tampil Arial.
-3. **Loading tidak seragam.** Sebagian halaman memakai komponen `Loading`; sebagian (`organizer/events`, `organizer/registrations`) memakai `<p className="text-sm text-[#737373]">Memuat...</p>`. Sama untuk state "memuat detail".
-4. **Error tidak seragam.** Kartu error inline hanya ada di 3 halaman; halaman lain hanya mengandalkan toast atau templat not-found sederhana.
-5. **Bahasa badge tidak konsisten.** UI berbahasa Indonesia, tetapi label `StatusBadge` berbahasa Inggris: "Pending / Approved / Cancelled".
-6. **Fokus tidak seragam.** Ring fokus hanya pada `Input`; `Button`, `select`, `textarea` tidak memiliki gaya `:focus-visible` yang sama.
-7. **`select` dan `textarea` ad-hoc.** Elemen ini menulis style langsung (tidak memakai komponen `Input`), sehingga border/focus berbeda dari `Input`.
-8. **Kontras tombol primary.** Tombol primary memakai `text-black` di atas `#FF6A00`. Ini nilai aktual; kelayakan kontras sebaiknya diperiksa terpisah (tidak diubah di sini).
-9. **Detail kecil:** judul section kosong pada `<FeaturedEvents title="" />` di beranda (merender `<h2>` kosong untuk daftar "event sekitar").
+2. **Error tidak seragam.** Kartu error inline hanya ada di 3 halaman; halaman lain hanya mengandalkan toast atau templat not-found sederhana.
+3. **`select` dan `textarea` ditulis ad-hoc.** Elemen ini memakai style langsung (bukan komponen `Input`); gaya fokus kini seragam, tetapi markup-nya tetap terduplikasi.
+4. **Kontras tombol primary.** Tombol primary memakai `text-black` di atas `#FF6A00`. Ini nilai aktual; kelayakan kontras sebaiknya diperiksa terpisah (tidak diubah di sini).
+5. **Detail kecil:** judul section kosong pada `<FeaturedEvents title="" />` di beranda (merender `<h2>` kosong untuk daftar "event sekitar").
 
 **Rekomendasi (terpisah dari implementasi, jangan diterapkan tanpa diminta):**
 
 - Pindahkan seluruh warna ke token dan pakai `text-foreground`, `bg-primary`, dll., agar theming terpusat.
-- Perbaiki `body { font-family: ... }` agar memakai `var(--font-sans)`, atau hapus agar Geist dipakai.
-- Standardisasi loading/error ke komponen `Loading` + satu pola kartu error.
-- Seragamkan bahasa badge ke bahasa Indonesia.
-- Terapkan `focus-visible` seragam pada semua elemen interaktif.
+- Standardisasi error ke satu pola kartu error.
 - Buat komponen `Select`/`Textarea` bila polanya mulai berulang.
+- Tambahkan indikator `Loading` di dashboard organizer bila data mulai berat.
 
 ---
 
-*Dokumen ini mencerminkan kondisi pada commit `0324a4f`. Perbarui bila tampilan/design system berubah (lihat `AGENTS.md`).*
+*Dokumen ini mencerminkan kondisi pada commit `e6427c6`. Perbarui bila tampilan/design system berubah (lihat `AGENTS.md`).*

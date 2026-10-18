@@ -59,6 +59,7 @@
 - Otorisasi **dua lapis**: `requireRole` di route + **pengecekan kepemilikan** di controller (`created_by === req.user.id` untuk event; pemilik/`user_id` untuk registrasi). Jangan hanya mengandalkan satu lapis.
 - Perubahan kuota/anti-duplikat harus tetap berada di dalam transaksi `SELECT ... FOR UPDATE`.
 - Upload file lewat `middlewares/upload.ts` (memoryStorage, jpg/jpeg/png, maks 5 MB) + `utils/upload.ts` ke Cloudinary. Jangan menulis file ke disk.
+- Route tak dikenal mengembalikan `404 { message: "Endpoint tidak ditemukan" }` (middleware 404 di `app.ts`); CORS dibatasi lewat env `CORS_ORIGIN` (default `http://localhost:3000`).
 
 ### Database
 - **Tidak ada migration tool.** Jangan mengubah skema database secara sepihak.
@@ -185,4 +186,4 @@ Jika perubahan mengubah salah satu aspek berikut, **perbarui dokumentasi terkait
 
 ---
 
-*Pedoman ini mencerminkan kondisi pada commit `0324a4f`.*
+*Pedoman ini mencerminkan kondisi pada commit `e6427c6`.*
