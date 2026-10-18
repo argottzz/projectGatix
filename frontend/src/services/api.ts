@@ -18,18 +18,18 @@ interface ApiOptions extends RequestInit {
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const headers = new Headers(options.headers);
-  const body = options.body;
-  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-  if (!isFormData && body && !headers.has("Content-Type")) {
+  const { auth, headers: rawHeaders, ...init } = options;
+  const headers = new Headers(rawHeaders);
+  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
+  if (!isFormData && init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (options.auth) {
+  if (auth) {
     const token = getToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
   const res = await fetch(`${API_URL}${path}`, {
-    ...options,
+    ...init,
     headers,
     cache: "no-store",
   });
