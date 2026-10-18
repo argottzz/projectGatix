@@ -77,7 +77,7 @@
 ### Authentication & Authorization
 - JWT dikirim `Authorization: Bearer <token>`; token disimpan di `localStorage` (`gatix_token`).
 - Role yang ada hanya `user` dan `organizer` — **tidak ada `admin`**. Jangan menambah role/klaim baru tanpa persetujuan; bila role baru ditambah, `become-organizer`/`useAuth`/`requireRole` juga perlu disesuaikan.
-- Jangan menuliskan secret/kredensial ke kode atau dokumentasi. `backend/.env.example` saat ini memuat nilai yang tampak seperti kredensial asli — **jangan menyalinnya ke dokumen atau berkas lain**.
+- Jangan menuliskan secret/kredensial ke kode atau dokumentasi. `backend/.env.example` memakai placeholder (isi nilai asli hanya di `backend/.env` yang git-ignored) — **jangan menyalinnya ke dokumen atau berkas lain**.
 
 ### Styling & UI Components
 - Warna ditulis sebagai nilai heksadesimal langsung (mis. `text-[#161616]`, `bg-[#FF6A00]`). Ikuti pola ini; **jangan** mulai memakai token CSS (`text-foreground`, `bg-primary`) kecuali tugasnya memang merapikan token (harus disetujui, karena menyentuh banyak file).
