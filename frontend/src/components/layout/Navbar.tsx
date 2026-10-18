@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Ticket, User as UserIcon, ChevronDown } from "lucide-react";
@@ -29,9 +29,9 @@ function NavLinks() {
     <nav className="hidden items-center gap-6 md:flex">
       {link("/", "Beranda")}
       {link("/events", "Jelajahi Event")}
-      <a href="/#kategori" className="text-sm font-medium text-[#161616] hover:text-[#FF6A00]">
+      <Link href="/#kategori" className="text-sm font-medium text-[#161616] hover:text-[#FF6A00]">
         Kategori
-      </a>
+      </Link>
       {user && link("/my-tickets", "Tiket Saya")}
       {user?.role === "organizer" && link("/organizer", "Dashboard")}
     </nav>
@@ -126,7 +126,7 @@ function MobileNav() {
     <nav className="flex items-center gap-4 border-t border-[#E5E7EB] px-4 py-2 md:hidden">
       {link("/", "Beranda")}
       {link("/events", "Event")}
-      <a href="/#kategori" className="text-sm font-medium text-[#161616]">Kategori</a>
+      <Link href="/#kategori" className="text-sm font-medium text-[#161616]">Kategori</Link>
       {user && link("/my-tickets", "Tiket Saya")}
       {user?.role === "organizer" && link("/organizer", "Dashboard")}
     </nav>
@@ -143,16 +143,10 @@ export function Navbar() {
           </span>
           <span className="text-lg font-extrabold tracking-tight text-[#161616]">GATIX</span>
         </Link>
-        <Suspense fallback={null}>
-          <NavLinks />
-        </Suspense>
-        <Suspense fallback={null}>
-          <AccountMenu />
-        </Suspense>
+        <NavLinks />
+        <AccountMenu />
       </div>
-      <Suspense fallback={null}>
-        <MobileNav />
-      </Suspense>
+      <MobileNav />
     </header>
   );
 }
