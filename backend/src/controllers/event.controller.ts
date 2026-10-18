@@ -169,6 +169,9 @@ export class EventController {
         if (Number.isNaN(d.getTime())) {
           return res.status(400).json({ message: "Tanggal tidak valid" });
         }
+        if (d.getTime() < Date.now() - 60_000) {
+          return res.status(400).json({ message: "Tanggal event harus di masa depan" });
+        }
         (merged as any).date = toMysqlDatetime(d);
       } else {
         (merged as any).date = existing[0].date;

@@ -119,7 +119,7 @@ Aturan yang **diterapkan di kode**:
 **Event**
 - `title` min 3 / maks 150, `description` min 1, `date` harus valid, `location` min 1 / maks 255, `price` ≥ 0, `quota` ≥ 1.
 - Saat **create**, tanggal event harus di masa depan (toleransi 60 detik).
-- Saat **update**, tanggal valid dicek, tetapi **tidak** ada pengecekan "harus masa depan" (perbedaan dari create).
+- Saat **update**, tanggal yang dikirim juga harus di masa depan (cek yang sama); bila tanggal tidak diubah, tidak divalidasi ulang.
 - Hanya `organizer` dan **hanya pemilik** (`created_by`) yang boleh ubah/hapus event dan melihat pendaftarannya.
 - Menghapus event menghapus registrasi terkait dan aset Cloudinary (banner + bukti pembayaran).
 
