@@ -1,11 +1,10 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import multer from "multer";
 import { env } from "./config/env.ts";
-import authRoutes from "./routes/auth.routes.ts";
-import eventRoutes from "./routes/event.routes.ts";
-import registrationRoutes from "./routes/registration.routes.ts";
+import { errorHandler } from "./middlewares/error.middleware.ts";
+import { notFoundHandler } from "./middlewares/not-found.middleware.ts";
+import routes from "./routes/index.ts";
 
 const app = express();
 
@@ -17,29 +16,8 @@ app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/events", eventRoutes);
-app.use("/api/v1/registrations", registrationRoutes);
-
-app.use((req, res) => {
-  res.status(404).json({ message: "Endpoint tidak ditemukan" });
-});
-
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ message: err.message });
-    }
-    if (err) {
-      return res.status(400).json({ message: err.message ?? "Upload gagal" });
-    }
-    next();
-  },
-);
+app.use("/api/v1", routes);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

@@ -50,7 +50,7 @@ Catatan `next.config.ts`: `cacheComponents: true`, `partialPrefetching: true`, `
 
 > ⚠️ **Catatan versi:** `backend/package.json` mencantumkan `"typescript": "^7.0.2"`. Nilai ini diambil apa adanya dari konfigurasi; keberadaan rilis publik TypeScript 7 **Belum terverifikasi** — periksa saat menyiapkan environment baru.
 
-**Database:** MySQL (nama default `db_event_ticketing`, dari `DB_NAME`). Tidak ada ORM/query builder; semua akses data lewat `mysql2/promise` pool (`backend/src/config/database.ts`).
+**Database:** MySQL (nama default `db_event_ticketing`, dari `DB_NAME`). Tidak ada ORM/query builder; semua akses data lewat `mysql2/promise` pool (`backend/src/db/index.ts`) dari dalam `backend/src/services/`.
 
 **Komunikasi API:** REST/JSON antar frontend → backend, dengan pembungkus `api()` (`frontend/src/services/api.ts`). Upload memakai `multipart/form-data`.
 
@@ -76,30 +76,41 @@ projectWeb/
 
 ```
 src/
-├─ app.ts                     # Setup Express: helmet, cors, json, routes, error handler
-├─ server.ts                  # Entry point: tes koneksi DB lalu listen
+├─ app.ts                          # Setup Express: helmet, cors, json, routes, 404, error handler
+├─ server.ts                       # Entry point: tes koneksi DB lalu listen
 ├─ config/
-│  ├─ env.ts                  # Baca & validasi environment variable
-│  ├─ database.ts             # Connection pool mysql2/promise
-│  └─ cloudinary.ts           # Konfigurasi SDK Cloudinary
+│  ├─ env.ts                       # Baca & validasi environment variable
+│  └─ cloudinary.ts                # Konfigurasi SDK Cloudinary
+├─ db/index.ts                     # Connection pool mysql2/promise
 ├─ controllers/
-│  ├─ auth.controller.ts      # register, login, me, updateMe, becomeOrganizer
-│  ├─ event.controller.ts     # list, detail, create, update, remove
-│  └─ registration.controller.ts # create, myTickets, detail, uploadPayment, updateStatus, listByEvent
+│  ├─ auth.controller.ts           # register, login, me, updateMe, becomeOrganizer
+│  ├─ event.controller.ts          # list, detail, create, update, remove
+│  └─ registration.controller.ts   # create, myTickets, detail, uploadPayment, updateStatus, listByEvent
 ├─ middlewares/
-│  ├─ auth.ts                 # verifyToken (JWT dari header Authorization)
-│  ├─ role.ts                 # requireRole(role) — hanya "organizer" yang dipakai
-│  └─ upload.ts               # multer memoryStorage + fileFilter + limit 5MB
+│  ├─ auth.middleware.ts           # verifyToken (JWT dari header Authorization)
+│  ├─ role.middleware.ts           # requireRole(role) — hanya "organizer" yang dipakai
+│  ├─ upload.middleware.ts         # multer memoryStorage + fileFilter + limit 5MB
+│  ├─ not-found.middleware.ts      # 404 { message: "Endpoint tidak ditemukan" }
+│  └─ error.middleware.ts          # Error handler multer/umum (status 400)
 ├─ routes/
+│  ├─ index.ts                     # Aggregator: mount auth/events/registrations di /api/v1
 │  ├─ auth.routes.ts
 │  ├─ event.routes.ts
 │  └─ registration.routes.ts
-├─ types/express.d.ts         # Augmentasi Request: user?: { id, role }
-├─ utils/upload.ts            # uploadImageToCloudinary()
-└─ validations/               # Skema zod: auth.ts, event.ts, registration.ts
+├─ services/                       # Akses database & Cloudinary
+│  ├─ auth.service.ts
+│  ├─ event.service.ts
+│  └─ registration.service.ts
+├─ types/auth.ts                   # AuthUser & AuthenticatedRequest
+├─ utils/
+│  ├─ auth.ts                      # extractToken, decodeToken, signToken
+│  ├─ cloudinary.ts                # uploadBufferToCloudinary()
+│  ├─ datetime.ts                  # toMysqlDatetime()
+│  └─ parseId.ts                   # Validasi parameter id
+└─ validations/                    # Skema zod: auth.validation.ts, event.validation.ts, registration.validation.ts
 ```
 
-**Alasan pemisahan (disimpulkan dari kode):** pemisahan `routes → controllers → (db/cloudinary)` mengikuti pola MVC ringan. **Tidak ada layer `services/`** — controller langsung memanggil database & Cloudinary. Validasi dipisah ke `validations/` dan dipanggil di dalam controller.
+**Alasan pemisahan (disimpulkan dari kode):** alur `routes → controllers → services → (db/cloudinary)`. Controller menangani validasi request, otorisasi kepemilikan, dan penyusunan respons; `services/` menangani query database, transaksi, serta upload/hapus Cloudinary. Validasi dipisah ke `validations/` dan dipanggil di dalam controller.
 
 ### Frontend (`frontend/src`)
 
@@ -181,29 +192,30 @@ flowchart LR
 ## 4. Backend Architecture
 
 ### Entry & bootstrap
-- `server.ts`: memanggil tes koneksi database (`database.ts`), keluar bila gagal, lalu `app.listen(env.port)`.
-- `app.ts`: `helmet()` → `cors()` → `express.json()` → router → **error handler** (4 argumen) di akhir untuk menangani error multer/umum (status 400, format `{ message }`).
+- `server.ts`: memanggil tes koneksi database (`db/index.ts`), keluar bila gagal, lalu `app.listen(env.port)`.
+- `app.ts`: `helmet()` → `cors()` → `express.json()` → router (`routes/index.ts` di bawah `/api/v1`) → **404 handler** → **error handler** (4 argumen) di akhir untuk menangani error multer/umum (status 400, format `{ message }`).
 
 ### Routing
-Tiga router di-mount di bawah prefix `/api/v1`:
+`routes/index.ts` menggabungkan tiga router dan di-mount di bawah prefix `/api/v1`:
 - `auth.routes.ts` → `/api/v1/auth`
 - `event.routes.ts` → `/api/v1/events`
 - `registration.routes.ts` → `/api/v1/registrations`
-- `GET /api/v1/health` → endpoint health sederhana.
+- `GET /api/v1/health` → endpoint health sederhana (didaftarkan langsung di `app.ts`).
 
-### Controllers
-Controller bertanggung jawab penuh: validasi input (via middleware zod), query database, upload Cloudinary, dan menyusun respons. **Tidak ada layer service/repository** — logika langsung berada di controller.
+### Controllers & services
+Controller menangani validasi input (via zod), pengecekan kepemilikan, dan penyusunan respons. Query database, transaksi (`pool.getConnection()` + `BEGIN/COMMIT/ROLLBACK`), serta upload/hapus Cloudinary berada di `services/` (`auth.service.ts`, `event.service.ts`, `registration.service.ts`). Untuk alur yang butuh `SELECT ... FOR UPDATE` (pendaftaran event, perubahan status), pengecekan kepemilikan ikut berada di dalam transaksi service dan hasilnya dikembalikan sebagai union type yang dipetakan controller ke status code.
 
 ### Middleware
-- `verifyToken` (`middlewares/auth.ts`): membaca `Authorization: Bearer <token>`, verifikasi JWT dengan `JWT_SECRET`, menyetel `req.user = { id, role }`. Token tidak valid → 401.
-- `requireRole(role)` (`middlewares/role.ts`): memastikan `req.user.role === role`; dipakai dengan `requireRole("organizer")`.
-- `upload` (`middlewares/upload.ts`): multer `memoryStorage`, `fileFilter` (ekstensi + mimetype jpg/jpeg/png), `limits.fileSize = 5 * 1024 * 1024`.
+- `verifyToken` (`middlewares/auth.middleware.ts`): membaca `Authorization: Bearer <token>` (via `utils/auth.ts`), verifikasi JWT dengan `JWT_SECRET`, menyetel `req.user = { id, name, email, role }`. Token tidak ada/invalid → 401.
+- `requireRole(role)` (`middlewares/role.middleware.ts`): memastikan `req.user.role === role`; dipakai dengan `requireRole("organizer")`.
+- `upload` (`middlewares/upload.middleware.ts`): multer `memoryStorage`, `fileFilter` (ekstensi + mimetype jpg/jpeg/png), `limits.fileSize = 5 * 1024 * 1024`.
+- `notFoundHandler` (`middlewares/not-found.middleware.ts`) dan `errorHandler` (`middlewares/error.middleware.ts`): dipasang setelah semua route di `app.ts`.
 
 ### Validation
-Skema zod di `validations/` (`auth.ts`, `event.ts`, `registration.ts`) **dipanggil langsung di dalam controller** (`schema.safeParse(req.body)`), **bukan** sebagai middleware Express. Bila gagal, controller mengembalikan 400 dengan `{ message: "Data tidak valid", error: <daftar issue zod> }`. Skema frontend (`frontend/src/validators/`) terpisah dan hanya untuk validasi form.
+Skema zod di `validations/` (`auth.validation.ts`, `event.validation.ts`, `registration.validation.ts`) **dipanggil langsung di dalam controller** (`schema.safeParse(req.body)`), **bukan** sebagai middleware Express. Tiap file juga mengekspor tipe turunan (`z.infer`) yang dipakai service. Bila gagal, controller mengembalikan 400 dengan `{ message: "Data tidak valid", error: <daftar issue zod> }`. Skema frontend (`frontend/src/validators/`) terpisah dan hanya untuk validasi form.
 
 ### Database access
-`config/database.ts` membuat pool `mysql2/promise` dari `env` (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`). Controller memakai `pool.query(...)`. **Tidak ada query builder/ORM.**
+`db/index.ts` membuat pool `mysql2/promise` dari `env` (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`). Query dijalankan di `services/*.service.ts` memakai `pool.query(...)` / `conn.query(...)`. **Tidak ada query builder/ORM.**
 
 ### Error handling
 - Respons error standar: `{ message: string }`; khusus kegagalan validasi: `{ message: "Data tidak valid", error: [...] }`. (Endpoint auth juga menyertakan `success: false` pada sebagian respons — lihat §6.)
@@ -473,7 +485,7 @@ POST /registrations (verifyToken)
 ```
 PATCH /registrations/:id/payment (verifyToken + multer)
   → cek registrasi milik user & status pending
-  → upload buffer ke Cloudinary (utils/upload.ts)
+  → upload buffer ke Cloudinary (utils/cloudinary.ts)
   → hapus bukti lama bila ada (destroy public_id lama)
   → UPDATE registrations SET payment_proof_url, payment_proof_public_id
   → respons
@@ -502,11 +514,11 @@ DELETE /events/:id (verifyToken + requireRole organizer)
 
 | Perubahan pada… | Perlu diperiksa… |
 |---|---|
-| Skema/kolom tabel | Semua controller (`auth`, `event`, `registration`) + tipe frontend (`types/*`) |
-| Kontrak API (nama field/status) | `services/*.service.ts`, `types/*`, halaman yang mengonsumsi |
-| Perubahan `role` | `middlewares/role.ts`, `auth.controller.ts`, `Navbar`, `useAuth`, halaman organizer |
-| Perubahan aturan kuota/status | `registration.controller.ts` (create, updateStatus), `StatusBadge`, `TicketStatus` |
-| Perubahan field event | `validations/event.ts` + `validators/event.schema.ts` + form create/edit + `types/event.ts` |
+| Skema/kolom tabel | Semua service (`auth.service.ts`, `event.service.ts`, `registration.service.ts`) + tipe frontend (`types/*`) |
+| Kontrak API (nama field/status) | `services/*.service.ts`, `controllers/*`, `types/*`, halaman yang mengonsumsi |
+| Perubahan `role` | `middlewares/role.middleware.ts`, `auth.controller.ts` + `auth.service.ts`, `Navbar`, `useAuth`, halaman organizer |
+| Perubahan aturan kuota/status | `registration.service.ts` (create, updateStatus), `StatusBadge`, `TicketStatus` |
+| Perubahan field event | `services/event.service.ts` + `validations/event.validation.ts` + `validators/event.schema.ts` + form create/edit + `types/event.ts` |
 | Perubahan warna/komponen UI | `SYSTEM_DESIGN.md` dan `components/ui/*` |
 | Perubahan konfigurasi Next | `next.config.ts` (Suspense, images, cacheComponents) |
 
@@ -518,7 +530,7 @@ DELETE /events/:id (verifyToken + requireRole organizer)
 
 1. **Skema database tidak ter-version.** Tidak ada `.sql`/migration; pemulihan/replikasi struktur bergantung pada database yang sudah ada. (Risiko tertinggi untuk onboarding & deploy.)
 2. **Token JWT disimpan di `localStorage`** → rentan terhadap XSS; tidak ada refresh token.
-3. **Tidak ada layer service** → logika bisnis menumpuk di controller; query SQL tersebar (sulit diuji).
+3. **Kontrak API belum tervalidasi tipe secara end-to-end** → tipe frontend (`types/*`) dan bentuk respons backend dijaga manual; tidak ada test kontrak otomatis.
 4. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Teks `/privacy` sudah diselaraskan (bukti hanya ditampilkan ke pemilik tiket & organizer), namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
 5. **Kredensial asli pernah ter-commit.** Nilai asli Cloudinary & `JWT_SECRET` sebelumnya ada di `backend/.env.example` dan **masih tersimpan di riwayat git**. Berkas contoh kini memakai placeholder, tetapi nilai lama perlu **dirotasi** (ganti API key/secret Cloudinary dan `JWT_SECRET`). Nilai tidak dicantumkan di dokumen ini.
 6. **Halaman organizer events tanpa paginasi** (`limit: 50`).

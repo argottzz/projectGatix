@@ -1,79 +1,76 @@
 import type { Request, Response } from "express";
-import pool from "../config/database.ts";
-import cloudinary from "../config/cloudinary.ts";
-import { createRegistrationSchema, updateRegistrationStatusSchema } from "../validations/registration.ts";
-import { uploadBufferToCloudinary } from "../utils/upload.ts";
+import { findEventById } from "../services/event.service.ts";
+import {
+  createRegistration,
+  findRegistrationById,
+  getRegistrationDetail,
+  getRegistrationsByEvent,
+  getTicketsByUser,
+  updateRegistrationStatus,
+  uploadPaymentProof,
+} from "../services/registration.service.ts";
+import type { AuthenticatedRequest } from "../types/auth.ts";
+import { parseId } from "../utils/parseId.ts";
+import {
+  createRegistrationSchema,
+  updateRegistrationStatusSchema,
+} from "../validations/registration.validation.ts";
 
-export class RegistrationController {
+class RegistrationController {
   create = async (req: Request, res: Response) => {
-    const conn = await pool.getConnection();
     try {
       const validation = createRegistrationSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ message: "Data tidak valid", error: validation.error.issues });
-      }
-      const { event_id } = validation.data;
-      const userId = (req as any).user.id;
 
-      await conn.beginTransaction();
-      const [events]: any = await conn.query("SELECT * FROM events WHERE id = ? LIMIT 1 FOR UPDATE", [event_id]);
-      if (events.length === 0) {
-        await conn.rollback();
+      if (!validation.success) {
+        return res.status(400).json({
+          message: "Data tidak valid",
+          error: validation.error.issues,
+        });
+      }
+
+      const userId = (req as AuthenticatedRequest).user.id;
+      const result = await createRegistration(
+        validation.data.event_id,
+        userId,
+      );
+
+      if (result.type === "event_not_found") {
         return res.status(404).json({ message: "Event tidak ditemukan" });
       }
-      const event = events[0];
 
-      const [existing]: any = await conn.query(
-        "SELECT * FROM registrations WHERE event_id = ? AND user_id = ? LIMIT 1",
-        [event_id, userId],
-      );
-      if (existing.length > 0 && existing[0].status !== "cancelled") {
-        await conn.rollback();
-        return res.status(400).json({ message: "Kamu sudah terdaftar di event ini" });
+      if (result.type === "already_registered") {
+        return res
+          .status(400)
+          .json({ message: "Kamu sudah terdaftar di event ini" });
       }
 
-      const [[{ taken }]]: any = await conn.query(
-        "SELECT COUNT(*) AS taken FROM registrations WHERE event_id = ? AND status IN ('pending','approved')",
-        [event_id],
-      );
-      if (Number(taken) >= Number(event.quota)) {
-        await conn.rollback();
+      if (result.type === "quota_full") {
         return res.status(400).json({ message: "Kuota event sudah habis" });
       }
 
-      const status = Number(event.price) === 0 ? "approved" : "pending";
-
-      if (existing.length > 0 && existing[0].status === "cancelled") {
-        await conn.query("UPDATE registrations SET status = ? WHERE id = ?", [status, existing[0].id]);
-        await conn.commit();
-        return res.status(200).json({ message: "Pendaftaran diaktifkan kembali", data: { id: existing[0].id, event_id, status } });
+      if (result.type === "reactivated") {
+        return res.status(200).json({
+          message: "Pendaftaran diaktifkan kembali",
+          data: result.data,
+        });
       }
 
-      const [result]: any = await conn.query(
-        "INSERT INTO registrations (event_id, user_id, status) VALUES (?, ?, ?)",
-        [event_id, userId, status],
-      );
-      await conn.commit();
-      res.status(201).json({ message: "Berhasil mendaftar event", data: { id: result.insertId, event_id, status } });
+      res.status(201).json({
+        message: "Berhasil mendaftar event",
+        data: result.data,
+      });
     } catch (error) {
-      try { await conn.rollback(); } catch {}
       console.error("ERROR CREATE REGISTRATION:", error);
       res.status(500).json({ message: "Gagal mendaftar event" });
-    } finally {
-      conn.release();
     }
   };
 
   myTickets = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
-      const [rows] = await pool.query(
-        `SELECT r.*, e.title, e.date, e.location, e.banner_url, e.price
-         FROM registrations r JOIN events e ON r.event_id = e.id
-         WHERE r.user_id = ? ORDER BY r.created_at DESC`,
-        [userId],
-      );
-      res.json({ message: "Berhasil mengambil tiket", data: rows });
+      const userId = (req as AuthenticatedRequest).user.id;
+      const tickets = await getTicketsByUser(userId);
+
+      res.json({ message: "Berhasil mengambil tiket", data: tickets });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal mengambil tiket" });
@@ -82,24 +79,35 @@ export class RegistrationController {
 
   detail = async (req: Request, res: Response) => {
     try {
-      const id = Number(req.params.id);
-      if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(400).json({ message: "ID pendaftaran tidak valid" });
+      const id = parseId(req.params.id);
+
+      if (id === null) {
+        return res
+          .status(400)
+          .json({ message: "ID pendaftaran tidak valid" });
       }
-      const [rows]: any = await pool.query(
-        `SELECT r.*, e.title, e.date, e.location, e.banner_url, e.price, e.created_by
-         FROM registrations r JOIN events e ON r.event_id = e.id WHERE r.id = ? LIMIT 1`,
-        [id],
-      );
-      if (rows.length === 0) {
-        return res.status(404).json({ message: "Pendaftaran tidak ditemukan" });
+
+      const registration = await getRegistrationDetail(id);
+
+      if (!registration) {
+        return res
+          .status(404)
+          .json({ message: "Pendaftaran tidak ditemukan" });
       }
-      const reg = rows[0];
-      const requester = (req as any).user;
-      if (reg.user_id !== requester.id && reg.created_by !== requester.id) {
+
+      const requester = (req as AuthenticatedRequest).user;
+
+      if (
+        registration.user_id !== requester.id &&
+        registration.created_by !== requester.id
+      ) {
         return res.status(403).json({ message: "Akses ditolak." });
       }
-      res.json({ message: "Berhasil mengambil detail pendaftaran", data: reg });
+
+      res.json({
+        message: "Berhasil mengambil detail pendaftaran",
+        data: registration,
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal mengambil detail pendaftaran" });
@@ -107,45 +115,54 @@ export class RegistrationController {
   };
 
   uploadPayment = async (req: Request, res: Response) => {
-    let newPublicId: string | null = null;
     try {
-      const id = Number(req.params.id);
-      if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(400).json({ message: "ID pendaftaran tidak valid" });
-      }
-      if (!(req as any).file) {
-        return res.status(400).json({ message: "Bukti pembayaran wajib diunggah" });
-      }
-      const [rows]: any = await pool.query("SELECT * FROM registrations WHERE id = ? LIMIT 1", [id]);
-      if (rows.length === 0) {
-        return res.status(404).json({ message: "Pendaftaran tidak ditemukan" });
-      }
-      const reg = rows[0];
-      const requester = (req as any).user;
-      if (reg.user_id !== requester.id) {
-        return res.status(403).json({ message: "Akses ditolak. Bukan tiket milikmu." });
-      }
-      if (reg.status !== "pending") {
-        return res.status(400).json({ message: "Bukti hanya bisa diunggah untuk status pending" });
+      const id = parseId(req.params.id);
+
+      if (id === null) {
+        return res
+          .status(400)
+          .json({ message: "ID pendaftaran tidak valid" });
       }
 
-      const f = (req as any).file as Express.Multer.File;
-      const uploaded = await uploadBufferToCloudinary(f.buffer, f.mimetype, "payments/proofs");
-      newPublicId = uploaded.public_id;
-      const oldPublicId = reg.payment_proof_public_id ?? null;
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ message: "Bukti pembayaran wajib diunggah" });
+      }
 
-      await pool.query(
-        "UPDATE registrations SET payment_proof_url = ?, payment_proof_public_id = ? WHERE id = ?",
-        [uploaded.secure_url, uploaded.public_id, id],
+      const registration = await findRegistrationById(id);
+
+      if (!registration) {
+        return res
+          .status(404)
+          .json({ message: "Pendaftaran tidak ditemukan" });
+      }
+
+      const requester = (req as AuthenticatedRequest).user;
+
+      if (registration.user_id !== requester.id) {
+        return res
+          .status(403)
+          .json({ message: "Akses ditolak. Bukan tiket milikmu." });
+      }
+
+      if (registration.status !== "pending") {
+        return res.status(400).json({
+          message: "Bukti hanya bisa diunggah untuk status pending",
+        });
+      }
+
+      const paymentProofUrl = await uploadPaymentProof(
+        id,
+        registration,
+        req.file,
       );
-      if (oldPublicId) {
-        try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
-      }
-      res.json({ message: "Berhasil mengunggah bukti pembayaran", data: { id, payment_proof_url: uploaded.secure_url } });
+
+      res.json({
+        message: "Berhasil mengunggah bukti pembayaran",
+        data: { id, payment_proof_url: paymentProofUrl },
+      });
     } catch (error) {
-      if (newPublicId) {
-        try { await cloudinary.uploader.destroy(newPublicId); } catch {}
-      }
       console.error("ERROR UPLOAD PAYMENT:", error);
       res.status(500).json({ message: "Gagal mengunggah bukti pembayaran" });
     }
@@ -153,25 +170,32 @@ export class RegistrationController {
 
   listByEvent = async (req: Request, res: Response) => {
     try {
-      const eventId = Number(req.params.id);
-      if (!Number.isSafeInteger(eventId) || eventId <= 0) {
+      const eventId = parseId(req.params.id);
+
+      if (eventId === null) {
         return res.status(400).json({ message: "ID event tidak valid" });
       }
-      const [events]: any = await pool.query("SELECT * FROM events WHERE id = ? LIMIT 1", [eventId]);
-      if (events.length === 0) {
+
+      const event = await findEventById(eventId);
+
+      if (!event) {
         return res.status(404).json({ message: "Event tidak ditemukan" });
       }
-      const requester = (req as any).user;
-      if (events[0].created_by !== requester.id) {
-        return res.status(403).json({ message: "Akses ditolak. Bukan event milikmu." });
+
+      const requester = (req as AuthenticatedRequest).user;
+
+      if (event.created_by !== requester.id) {
+        return res
+          .status(403)
+          .json({ message: "Akses ditolak. Bukan event milikmu." });
       }
-      const [rows] = await pool.query(
-        `SELECT r.*, u.name AS user_name, u.email AS user_email
-         FROM registrations r JOIN users u ON r.user_id = u.id
-         WHERE r.event_id = ? ORDER BY r.created_at DESC`,
-        [eventId],
-      );
-      res.json({ message: "Berhasil mengambil pendaftaran event", data: rows });
+
+      const registrations = await getRegistrationsByEvent(eventId);
+
+      res.json({
+        message: "Berhasil mengambil pendaftaran event",
+        data: registrations,
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal mengambil pendaftaran event" });
@@ -179,65 +203,60 @@ export class RegistrationController {
   };
 
   updateStatus = async (req: Request, res: Response) => {
-    const conn = await pool.getConnection();
     try {
-      const id = Number(req.params.id);
-      if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(400).json({ message: "ID pendaftaran tidak valid" });
+      const id = parseId(req.params.id);
+
+      if (id === null) {
+        return res
+          .status(400)
+          .json({ message: "ID pendaftaran tidak valid" });
       }
+
       const validation = updateRegistrationStatusSchema.safeParse(req.body);
+
       if (!validation.success) {
-        return res.status(400).json({ message: "Status tidak valid", error: validation.error.issues });
+        return res.status(400).json({
+          message: "Status tidak valid",
+          error: validation.error.issues,
+        });
       }
-      const { status } = validation.data;
-      const requester = (req as any).user;
 
-      await conn.beginTransaction();
-      const [rows]: any = await conn.query(
-        `SELECT r.*, e.created_by, e.quota FROM registrations r JOIN events e ON r.event_id = e.id WHERE r.id = ? LIMIT 1 FOR UPDATE`,
-        [id],
+      const requester = (req as AuthenticatedRequest).user;
+      const result = await updateRegistrationStatus(
+        id,
+        validation.data.status,
+        requester,
       );
-      if (rows.length === 0) {
-        await conn.rollback();
-        return res.status(404).json({ message: "Pendaftaran tidak ditemukan" });
-      }
-      const reg = rows[0];
-      const isEventOwner = reg.created_by === requester.id;
-      const isOrganizer = requester.role === "organizer";
 
-      // Hanya pemilik event yang boleh mengubah status bebas.
-      // User biasa hanya boleh membatalkan tiket miliknya sendiri.
-      if (!isEventOwner && isOrganizer) {
-        await conn.rollback();
-        return res.status(403).json({ message: "Akses ditolak. Bukan event milikmu." });
-      }
-      if (!isEventOwner && !isOrganizer) {
-        if (reg.user_id !== requester.id || status !== "cancelled") {
-          await conn.rollback();
-          return res.status(403).json({ message: "Akses ditolak." });
-        }
+      if (result.type === "not_found") {
+        return res
+          .status(404)
+          .json({ message: "Pendaftaran tidak ditemukan" });
       }
 
-      if (status === "approved") {
-        const [[{ approved }]]: any = await conn.query(
-          "SELECT COUNT(*) AS approved FROM registrations WHERE event_id = ? AND status = 'approved' AND id != ?",
-          [reg.event_id, id],
-        );
-        if (Number(approved) >= Number(reg.quota)) {
-          await conn.rollback();
-          return res.status(400).json({ message: "Kuota event sudah habis" });
-        }
+      if (result.type === "forbidden_owner") {
+        return res
+          .status(403)
+          .json({ message: "Akses ditolak. Bukan event milikmu." });
       }
 
-      await conn.query("UPDATE registrations SET status = ? WHERE id = ?", [status, id]);
-      await conn.commit();
-      res.json({ message: "Berhasil mengubah status pendaftaran", data: { id, status } });
+      if (result.type === "forbidden") {
+        return res.status(403).json({ message: "Akses ditolak." });
+      }
+
+      if (result.type === "quota_full") {
+        return res.status(400).json({ message: "Kuota event sudah habis" });
+      }
+
+      res.json({
+        message: "Berhasil mengubah status pendaftaran",
+        data: result.data,
+      });
     } catch (error) {
-      try { await conn.rollback(); } catch {}
       console.error("ERROR UPDATE STATUS:", error);
-      res.status(500).json({ message: "Gagal mengubah status pendaftaran" });
-    } finally {
-      conn.release();
+      res
+        .status(500)
+        .json({ message: "Gagal mengubah status pendaftaran" });
     }
   };
 }

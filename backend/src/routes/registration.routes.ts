@@ -1,7 +1,7 @@
 import { Router } from "express";
 import registrationController from "../controllers/registration.controller.ts";
-import { verifyToken } from "../middlewares/auth.ts";
-import upload from "../middlewares/upload.ts";
+import { verifyToken } from "../middlewares/auth.middleware.ts";
+import upload from "../middlewares/upload.middleware.ts";
 
 const router = Router();
 

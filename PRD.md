@@ -65,7 +65,7 @@ Alur bisnis utama (dari sisi pengguna hingga data tersimpan):
 
 ## 3. User Roles
 
-Role yang **benar-benar ada** di kode: `user` dan `organizer` (`backend/src/middlewares/role.ts`, `requireRole(...)`; `backend/src/controllers/auth.controller.ts`). **Tidak ada role `admin`** di backend aktual (meskipun template lama `belajarExpress2` memilikinya).
+Role yang **benar-benar ada** di kode: `user` dan `organizer` (`backend/src/middlewares/role.middleware.ts`, `requireRole(...)`; `backend/src/controllers/auth.controller.ts`). **Tidak ada role `admin`** di backend aktual (meskipun template lama `belajarExpress2` memilikinya).
 
 | Role | Cara didapat | Hak akses |
 |---|---|---|

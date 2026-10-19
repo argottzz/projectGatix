@@ -29,11 +29,11 @@
 ## 2. Coding Principles
 
 - **Prioritaskan kode sederhana, mudah dibaca, dan mudah dipelihara.** Lebih baik lebih panjang tetapi jelas daripada singkat tetapi rumit.
-- **Hindari overengineering.** Jangan menambah layer/abstraksi yang tidak perlu. Backend saat ini **tanpa** layer service; jangan menambahkannya tanpa kebutuhan nyata.
+- **Hindari overengineering.** Jangan menambah layer/abstraksi yang tidak perlu. Backend memakai pola `routes → controllers → services`; jangan menambah layer baru (mis. repository) tanpa kebutuhan nyata.
 - **Hindari duplikasi logika yang tidak perlu**, tetapi jangan abstraksi dini hanya demi mengurangi baris.
 - **Ikuti konvensi yang sudah ada:**
   - Frontend memakai **impor relatif** (`../../services/...`), meski alias `@/*` tersedia. **Jangan** mulai memakai `@/` kecuali diminta.
-  - Backend memisahkan `routes → controllers` dan file skema `validations/` (zod).
+  - Backend memisahkan `routes → controllers → services` dan file skema `validations/*.validation.ts` (zod).
   - Nama fungsi & file: `camelCase` untuk fungsi, `PascalCase` untuk komponen React, `kebab-case`/`nama.service.ts` untuk service frontend.
 - **Jangan menambahkan komentar yang tidak bermanfaat.** Kode sudah sebagian tanpa komentar; hormati gaya itu.
 - **Jangan membuat helper/service/hook/komponen baru tanpa kebutuhan jelas.** Periksa dulu apakah sudah ada yang serupa (mis. `lib/utils.ts` untuk `cn`/format, `components/ui/*`).
@@ -53,13 +53,14 @@
 - Karena `next/image` dipakai untuk gambar Cloudinary, tambahkan hostname baru ke `images.remotePatterns` di `next.config.ts` bila sumber gambar berubah.
 
 ### Backend
-- Ikuti pola `routes → controller`. Middleware auth/role memakai `verifyToken`/`requireRole`. Skema zod di `validations/` **dipanggil di dalam controller** (`schema.safeParse(req.body)`), **bukan** sebagai middleware Express.
+- Ikuti pola `routes → controllers → services`: controller menangani validasi request, otorisasi, dan respons; `services/*.service.ts` menangani query database, transaksi, dan Cloudinary. Nama file middleware/validasi memakai sufiks (`auth.middleware.ts`, `event.validation.ts`).
+- Middleware auth/role memakai `verifyToken`/`requireRole`. Skema zod di `validations/*.validation.ts` **dipanggil di dalam controller** (`schema.safeParse(req.body)`), **bukan** sebagai middleware Express.
 - Respons sukses: `{ message, data }` (daftar event menambah `pagination`; endpoint auth menambah `token` di level atas dan sebagian menambah `success`). Error: `{ message }`; kegagalan validasi: `{ message: "Data tidak valid", error: [...] }`.
-- Akses database lewat pool di `config/database.ts` memakai `pool.query(...)` (query berparameter `?`, jangan menyusun SQL dengan string interpolation dari input pengguna).
-- Otorisasi **dua lapis**: `requireRole` di route + **pengecekan kepemilikan** di controller (`created_by === req.user.id` untuk event; pemilik/`user_id` untuk registrasi). Jangan hanya mengandalkan satu lapis.
+- Akses database lewat pool di `db/index.ts` memakai `pool.query(...)` (query berparameter `?`, jangan menyusun SQL dengan string interpolation dari input pengguna). Panggilan DB hanya dari `services/`.
+- Otorisasi **dua lapis**: `requireRole` di route + **pengecekan kepemilikan** (`created_by === req.user.id` untuk event; pemilik/`user_id` untuk registrasi). Untuk alur transaksional (`SELECT ... FOR UPDATE`), pengecekan kepemilikan boleh berada di dalam transaksi service dan hasilnya dipetakan controller.
 - Perubahan kuota/anti-duplikat harus tetap berada di dalam transaksi `SELECT ... FOR UPDATE`.
-- Upload file lewat `middlewares/upload.ts` (memoryStorage, jpg/jpeg/png, maks 5 MB) + `utils/upload.ts` ke Cloudinary. Jangan menulis file ke disk.
-- Route tak dikenal mengembalikan `404 { message: "Endpoint tidak ditemukan" }` (middleware 404 di `app.ts`); CORS dibatasi lewat env `CORS_ORIGIN` (default `http://localhost:3000`).
+- Upload file lewat `middlewares/upload.middleware.ts` (memoryStorage, jpg/jpeg/png, maks 5 MB) + `utils/cloudinary.ts` ke Cloudinary. Jangan menulis file ke disk.
+- Route tak dikenal mengembalikan `404 { message: "Endpoint tidak ditemukan" }` (`middlewares/not-found.middleware.ts`); CORS dibatasi lewat env `CORS_ORIGIN` (default `http://localhost:3000`).
 
 ### Database
 - **Tidak ada migration tool.** Jangan mengubah skema database secara sepihak.
@@ -71,7 +72,7 @@
 - Bila menambah endpoint, sertakan validasi zod + autentikasi/otorisasi yang sesuai, dan dokumentasikan di `ARCHITECTURE.md` §6 (dan `backend/docs/API.md`).
 
 ### Validasi & Error Handling
-- Validasi di dua sisi bila relevan: backend (`validations/*`) untuk keamanan, frontend (`validators/*`) untuk UX.
+- Validasi di dua sisi bila relevan: backend (`validations/*.validation.ts`) untuk keamanan, frontend (`validators/*`) untuk UX.
 - Pesan error dalam bahasa Indonesia dan sejelas mungkin; pertahankan pesan yang sudah ada kecuali diminta mengubahnya.
 - Di frontend, error API ditampilkan lewat `toast.error(err.message)` atau kartu error inline sesuai pola halaman yang sudah ada.
 

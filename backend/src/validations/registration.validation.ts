@@ -7,3 +7,8 @@ export const createRegistrationSchema = z.object({
 export const updateRegistrationStatusSchema = z.object({
   status: z.enum(["approved", "cancelled"]),
 });
+
+export type CreateRegistrationInput = z.infer<typeof createRegistrationSchema>;
+export type UpdateRegistrationStatusInput = z.infer<
+  typeof updateRegistrationStatusSchema
+>;

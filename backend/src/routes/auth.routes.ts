@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import authController from "../controllers/auth.controller.ts";
-import { verifyToken } from "../middlewares/auth.ts";
+import { verifyToken } from "../middlewares/auth.middleware.ts";
 
 const router = Router();
 

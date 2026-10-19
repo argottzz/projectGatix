@@ -1,11 +1,20 @@
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import pool from "../config/database.ts";
-import { env } from "../config/env.ts";
-import { loginSchema, registerSchema, updateProfileSchema } from "../validations/auth.ts";
+import {
+  findUserById,
+  loginUser,
+  registerUser,
+  updateUserRole,
+  updateUserName,
+} from "../services/auth.service.ts";
+import type { AuthenticatedRequest } from "../types/auth.ts";
+import { signToken } from "../utils/auth.ts";
+import {
+  loginSchema,
+  registerSchema,
+  updateProfileSchema,
+} from "../validations/auth.validation.ts";
 
-export class AuthController {
+class AuthController {
   register = async (req: Request, res: Response) => {
     try {
       const validation = registerSchema.safeParse(req.body);
@@ -18,40 +27,20 @@ export class AuthController {
         });
       }
 
-      const { name, email, password } = validation.data;
+      const result = await registerUser(validation.data);
 
-      const [existing]: any = await pool.query(
-        "SELECT id FROM users WHERE email = ? LIMIT 1",
-        [email],
-      );
-
-      if (existing.length > 0) {
+      if (!result) {
         return res.status(400).json({
           success: false,
           message: "Email Sudah Ada",
         });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const [result]: any = await pool.query(
-        "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')",
-        [name, email, hashedPassword],
-      );
-
-      const token = jwt.sign(
-        { id: result.insertId, name, email, role: "user" },
-        env.jwtSecret,
-        {
-          expiresIn: env.jwtExpiresIn as any,
-        },
-      );
-
       return res.status(201).json({
         success: true,
         message: "Register berhasil",
-        data: { id: result.insertId, name, email, role: "user" },
-        token,
+        data: result.user,
+        token: result.token,
       });
     } catch (error) {
       console.error("ERROR REGISTER:", error);
@@ -74,46 +63,20 @@ export class AuthController {
         });
       }
 
-      const { email, password } = validation.data;
+      const result = await loginUser(validation.data);
 
-      const [rows]: any = await pool.query(
-        "SELECT * FROM users WHERE email = ? LIMIT 1",
-        [email],
-      );
-
-      if (rows.length === 0) {
+      if (!result) {
         return res.status(401).json({
           success: false,
           message: "Email atau password salah",
         });
       }
-
-      const user = rows[0];
-      const isMatch = await bcrypt.compare(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({
-          success: false,
-          message: "Email atau password salah",
-        });
-      }
-
-      const token = jwt.sign(
-        { id: user.id, email: user.email, name: user.name, role: user.role },
-        env.jwtSecret,
-        { expiresIn: env.jwtExpiresIn as any },
-      );
 
       return res.json({
         success: true,
         message: "Login berhasil",
-        token,
-        data: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
+        token: result.token,
+        data: result.user,
       });
     } catch (error) {
       console.error("ERROR LOGIN:", error);
@@ -126,17 +89,14 @@ export class AuthController {
 
   me = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
-      const [rows]: any = await pool.query(
-        "SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1",
-        [userId],
-      );
+      const userId = (req as AuthenticatedRequest).user.id;
+      const user = await findUserById(userId);
 
-      if (rows.length === 0) {
+      if (!user) {
         return res.status(404).json({ message: "User tidak ditemukan" });
       }
 
-      res.json({ message: "Fetch Successfully.", data: rows[0] });
+      res.json({ message: "Fetch Successfully.", data: user });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal mengambil user" });
@@ -154,22 +114,14 @@ export class AuthController {
         });
       }
 
-      const userId = (req as any).user.id;
-      const [result]: any = await pool.query("UPDATE users SET name = ? WHERE id = ?", [
-        validation.data.name,
-        userId,
-      ]);
+      const userId = (req as AuthenticatedRequest).user.id;
+      const user = await updateUserName(userId, validation.data.name);
 
-      if (result.affectedRows === 0) {
+      if (!user) {
         return res.status(404).json({ message: "User tidak ditemukan" });
       }
 
-      const [rows]: any = await pool.query(
-        "SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1",
-        [userId],
-      );
-
-      res.json({ message: "Profil berhasil diperbarui", data: rows[0] });
+      res.json({ message: "Profil berhasil diperbarui", data: user });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal memperbarui profil" });
@@ -178,30 +130,32 @@ export class AuthController {
 
   becomeOrganizer = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
-      const [rows]: any = await pool.query(
-        "SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1",
-        [userId],
-      );
+      const userId = (req as AuthenticatedRequest).user.id;
+      const user = await findUserById(userId);
 
-      if (rows.length === 0) {
+      if (!user) {
         return res.status(404).json({ message: "User tidak ditemukan" });
       }
 
-      if (rows[0].role === "organizer") {
-        return res.status(400).json({ message: "Akun ini sudah menjadi organizer" });
+      if (user.role === "organizer") {
+        return res
+          .status(400)
+          .json({ message: "Akun ini sudah menjadi organizer" });
       }
 
-      await pool.query("UPDATE users SET role = 'organizer' WHERE id = ?", [userId]);
+      const updated = await updateUserRole(userId, "organizer");
 
-      const updated = { ...rows[0], role: "organizer" };
-      const token = jwt.sign(
-        { id: updated.id, email: updated.email, name: updated.name, role: updated.role },
-        env.jwtSecret,
-        { expiresIn: env.jwtExpiresIn as any },
-      );
+      if (!updated) {
+        return res.status(404).json({ message: "User tidak ditemukan" });
+      }
 
-      res.json({ message: "Akun berhasil diupgrade menjadi organizer", data: updated, token });
+      const token = signToken(updated);
+
+      res.json({
+        message: "Akun berhasil diupgrade menjadi organizer",
+        data: updated,
+        token,
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Gagal upgrade menjadi organizer" });

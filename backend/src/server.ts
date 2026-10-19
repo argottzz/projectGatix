@@ -1,5 +1,5 @@
 import app from "./app.ts";
-import pool from "./config/database.ts";
+import pool from "./db/index.ts";
 import { env } from "./config/env.ts";
 
 try {
