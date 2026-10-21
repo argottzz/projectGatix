@@ -96,7 +96,7 @@ class EventController {
       if (date.getTime() < Date.now() - 60_000) {
         return res
           .status(400)
-          .json({ message: "Tanggal event harus di masa depan" });
+          .json({ message: "Tanggal event tidak boleh kurang dari hari ini" });
       }
 
       const userId = (req as AuthenticatedRequest).user.id;
