@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { CATEGORIES } from "../home/categories";
 import { Input } from "../ui/Input";
@@ -30,11 +30,6 @@ export const EMPTY_FILTER: EventFilter = {
 
 export function EventFilters({ initial, onSearch }: { initial: EventFilter; onSearch: (f: EventFilter) => void }) {
   const [form, setForm] = useState(initial);
-
-  useEffect(() => {
-    setForm(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial.search, initial.location, initial.date_from, initial.date_to]);
 
   return (
     <div className="flex flex-col gap-4">

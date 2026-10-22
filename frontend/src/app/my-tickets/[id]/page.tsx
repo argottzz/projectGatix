@@ -31,8 +31,21 @@ function TicketDetail() {
   }, [params.id]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    (async () => {
+      try {
+        const res = await getRegistration(params.id);
+        if (active) setTicket(res.data);
+      } catch (err) {
+        if (active) toast.error(err instanceof Error ? err.message : "Gagal memuat tiket");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [params.id]);
 
   if (loading) return <Loading text="Memuat tiket..." />;
   if (!ticket) return <p className="text-sm text-danger">Tiket tidak ditemukan.</p>;

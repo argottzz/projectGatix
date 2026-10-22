@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { becomeOrganizer, updateProfile } from "../../../services/auth.service";
 import { useAuth } from "../../../hooks/useAuth";
@@ -11,13 +11,8 @@ import { Card } from "../../../components/ui/Card";
 
 export default function OrganizerProfilePage() {
   const { user, refresh } = useAuth();
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
-
-  useEffect(() => {
-    if (user) setName(user.name);
-  }, [user]);
 
   return (
     <div className="flex flex-col gap-6 md:flex-row">
@@ -36,16 +31,18 @@ export default function OrganizerProfilePage() {
             </div>
           </div>
           <form
+            key={user?.id ?? "guest"}
             className="mt-5 flex flex-col gap-4"
             onSubmit={async (e) => {
               e.preventDefault();
-              if (name.trim().length < 3) {
+              const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+              if (name.length < 3) {
                 toast.error("Nama minimal 3 karakter");
                 return;
               }
               setLoading(true);
               try {
-                await updateProfile(name.trim());
+                await updateProfile(name);
                 await refresh();
                 toast.success("Profil berhasil diperbarui");
               } catch (err) {
@@ -55,7 +52,7 @@ export default function OrganizerProfilePage() {
               }
             }}
           >
-            <Input label="Nama" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input label="Nama" name="name" defaultValue={user?.name ?? ""} />
             <Button type="submit" loading={loading}>Simpan</Button>
           </form>
           {user?.role !== "organizer" && (

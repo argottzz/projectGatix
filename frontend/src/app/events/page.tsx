@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { listEvents } from "../../services/event.service";
@@ -30,43 +30,33 @@ function EventsContent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setPage(1);
-    setFilter((f) =>
-      f.search === urlSearch &&
-      f.location === urlLocation &&
-      f.date_from === urlFrom &&
-      f.date_to === urlTo
-        ? f
-        : { ...f, search: urlSearch, location: urlLocation, date_from: urlFrom, date_to: urlTo },
-    );
-  }, [urlSearch, urlLocation, urlFrom, urlTo]);
-
-  const load = useCallback(async (f: EventFilter, p: number) => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await listEvents({
-        search: f.search,
-        location: f.location,
-        date_from: f.date_from ? new Date(f.date_from).toISOString() : undefined,
-        date_to: f.date_to ? new Date(f.date_to).toISOString() : undefined,
-        sort_by: f.sort_by,
-        order: f.order,
-        page: p,
-        limit: 9,
-      });
-      setEvents(res.data);
-      setTotalPages(res.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat event");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load(filter, page);
-  }, [filter, page, load]);
+    let active = true;
+    (async () => {
+      try {
+        const res = await listEvents({
+          search: filter.search,
+          location: filter.location,
+          date_from: filter.date_from ? new Date(filter.date_from).toISOString() : undefined,
+          date_to: filter.date_to ? new Date(filter.date_to).toISOString() : undefined,
+          sort_by: filter.sort_by,
+          order: filter.order,
+          page,
+          limit: 9,
+        });
+        if (!active) return;
+        setEvents(res.data);
+        setTotalPages(res.pagination.totalPages);
+        setError("");
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : "Gagal memuat event");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [filter, page]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +67,14 @@ function EventsContent() {
           Temukan acara yang cocok untukmu berdasarkan kata kunci, lokasi, dan tanggal.
         </p>
       </div>
-      <EventFilters initial={filter} onSearch={(f) => { setPage(1); setFilter(f); }} />
+      <EventFilters
+        initial={filter}
+        onSearch={(f) => {
+          setLoading(true);
+          setPage(1);
+          setFilter(f);
+        }}
+      />
       {loading ? (
         <Loading text="Memuat event..." />
       ) : error ? (
@@ -92,13 +89,29 @@ function EventsContent() {
         <>
           <EventGrid events={events} />
           <div className="flex items-center justify-between gap-3 text-sm">
-            <Button variant="secondary" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={page <= 1}
+              onClick={() => {
+                setLoading(true);
+                setPage(page - 1);
+              }}
+            >
               <ChevronLeft size={16} /> Sebelumnya
             </Button>
             <span className="text-muted">
               Halaman {page} dari {Math.max(1, totalPages)}
             </span>
-            <Button variant="secondary" type="button" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => {
+                setLoading(true);
+                setPage(page + 1);
+              }}
+            >
               Berikutnya <ChevronRight size={16} />
             </Button>
           </div>
@@ -108,10 +121,21 @@ function EventsContent() {
   );
 }
 
+function EventsRoute() {
+  const searchParams = useSearchParams();
+  const key = [
+    searchParams.get("search") ?? "",
+    searchParams.get("location") ?? "",
+    searchParams.get("date_from") ?? "",
+    searchParams.get("date_to") ?? "",
+  ].join("|");
+  return <EventsContent key={key} />;
+}
+
 export default function EventsPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <EventsContent />
+      <EventsRoute />
     </Suspense>
   );
 }

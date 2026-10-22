@@ -15,20 +15,21 @@ export default function OrganizerEventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await listEvents({ limit: 50 });
-      setEvents(res.data);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal memuat event");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    load();
+    let active = true;
+    (async () => {
+      try {
+        const res = await listEvents({ limit: 50 });
+        if (active) setEvents(res.data);
+      } catch (err) {
+        if (active) toast.error(err instanceof Error ? err.message : "Gagal memuat event");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
@@ -91,7 +92,7 @@ export default function OrganizerEventsPage() {
                       try {
                         await deleteEvent(e.id);
                         toast.success("Event dihapus");
-                        load();
+                        setEvents((prev) => prev.filter((item) => item.id !== e.id));
                       } catch (err) {
                         toast.error(err instanceof Error ? err.message : "Gagal menghapus");
                       }

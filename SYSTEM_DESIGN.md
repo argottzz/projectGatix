@@ -212,7 +212,7 @@ Halaman yang dihapus: `/about`, `/help`, `/privacy`, `/terms` (tidak memiliki du
 
 - `input[type=file]` masih memakai styling `file:` langsung (dua tempat: banner event dan bukti pembayaran).
 - Halaman dashboard organizer belum menampilkan indikator loading global.
-- Aturan ESLint `react-hooks/set-state-in-effect` melaporkan pola data-fetching lama di beberapa halaman; perilaku tidak diubah pada redesign ini.
+- Data-fetching memakai effect dengan guard `active` agar hasil permintaan lama tidak menimpa state; bootstrap sesi di `hooks/useAuth.tsx` memakai satu `eslint-disable` terarah.
 
 ---
 

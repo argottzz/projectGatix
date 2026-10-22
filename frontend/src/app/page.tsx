@@ -57,21 +57,22 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!city.trim()) {
-      setNearby([]);
-      return;
-    }
+    const value = city.trim();
+    if (!value) return;
+    let active = true;
     (async () => {
-      setLoadingNearby(true);
       try {
-        const res = await listEvents({ location: city.trim(), limit: 4, sort_by: "date", order: "asc" });
-        setNearby(res.data);
+        const res = await listEvents({ location: value, limit: 4, sort_by: "date", order: "asc" });
+        if (active) setNearby(res.data);
       } catch {
-        setNearby([]);
+        if (active) setNearby([]);
       } finally {
-        setLoadingNearby(false);
+        if (active) setLoadingNearby(false);
       }
     })();
+    return () => {
+      active = false;
+    };
   }, [city]);
 
   if (loading) return <Loading text="Memuat event..." />;
@@ -102,7 +103,16 @@ export default function HomePage() {
           <input
             placeholder="Ketik kota, mis. Depok"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setCity(value);
+              if (value.trim()) {
+                setLoadingNearby(true);
+              } else {
+                setNearby([]);
+                setLoadingNearby(false);
+              }
+            }}
             className="h-11 w-full rounded-xl border border-line bg-white px-3.5 text-sm text-ink placeholder:text-muted/70 outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10 md:w-72"
           />
         </div>
