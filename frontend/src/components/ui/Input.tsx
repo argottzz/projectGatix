@@ -9,16 +9,19 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export function Input({ label, error, className, ...rest }: InputProps) {
   return (
-    <div className="flex flex-col gap-1">
-      {label && <label className="text-sm font-medium text-[#161616]">{label}</label>}
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{label}</label>
+      )}
       <input
         className={cn(
-          "rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#161616] outline-none focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30",
+          "h-11 w-full rounded-xl border border-line bg-white px-3.5 text-sm text-ink placeholder:text-muted/70 outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10 disabled:bg-surface-alt",
+          error && "border-danger/40",
           className,
         )}
         {...rest}
       />
-      {error && <span className="text-xs text-[#DC2626]">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   );
 }

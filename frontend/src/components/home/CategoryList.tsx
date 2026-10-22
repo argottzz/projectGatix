@@ -1,23 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { CATEGORIES } from "./categories";
 
 export function CategoryList() {
   return (
-    <section id="kategori" className="flex scroll-mt-24 flex-col gap-3">
-      <h2 className="text-xl font-extrabold text-[#161616]">Jelajahi Kategori</h2>
+    <section id="kategori" className="flex scroll-mt-28 flex-col gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="font-display text-2xl tracking-tight text-ink md:text-3xl">Jelajahi Kategori</h2>
+          <p className="text-sm text-muted">Pilih kategori dan temukan event yang paling relevan.</p>
+        </div>
+        <Link
+          href="/events"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition hover:gap-2"
+        >
+          Semua event <ArrowRight size={15} />
+        </Link>
+      </div>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
         {CATEGORIES.map((c) => (
           <Link
             key={c.label}
             href={`/events?search=${encodeURIComponent(c.keyword)}`}
-            className="flex flex-col items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition hover:border-[#FF6A00]"
+            className="group flex flex-col items-center gap-3 rounded-2xl border border-line bg-white p-4 text-center shadow-card transition hover:-translate-y-0.5 hover:border-brand-line hover:shadow-lift"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF6A00]/10 text-[#FF6A00]">
-              <c.icon size={20} />
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand transition group-hover:bg-brand group-hover:text-white">
+              <c.icon size={21} />
             </span>
-            <span className="text-xs font-semibold text-[#161616]">{c.label}</span>
+            <span className="text-xs font-semibold text-ink">{c.label}</span>
           </Link>
         ))}
       </div>

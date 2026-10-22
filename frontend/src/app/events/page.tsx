@@ -2,11 +2,13 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { listEvents } from "../../services/event.service";
 import type { EventItem } from "../../types/event";
 import { EventGrid } from "../../components/events/EventGrid";
 import { EMPTY_FILTER, EventFilters, type EventFilter } from "../../components/events/EventFilters";
 import { Loading } from "../../components/ui/Loading";
+import { Button } from "../../components/ui/Button";
 
 function EventsContent() {
   const searchParams = useSearchParams();
@@ -67,23 +69,38 @@ function EventsContent() {
   }, [filter, page, load]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-extrabold text-[#161616]">Jelajahi Event</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">Katalog event</p>
+        <h1 className="font-display text-3xl tracking-tight text-ink md:text-4xl">Jelajahi Event</h1>
+        <p className="text-sm text-muted">
+          Temukan acara yang cocok untukmu berdasarkan kata kunci, lokasi, dan tanggal.
+        </p>
+      </div>
       <EventFilters initial={filter} onSearch={(f) => { setPage(1); setFilter(f); }} />
       {loading ? (
         <Loading text="Memuat event..." />
       ) : error ? (
-        <div className="rounded-xl border border-[#E5E7EB] bg-white p-6 text-center">
-          <p className="font-semibold text-[#DC2626]">Gagal memuat event</p>
-          <p className="text-sm text-[#737373]">{error}</p>
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white px-6 py-14 text-center shadow-card">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-danger-soft text-danger">
+            <ShieldCheck size={22} />
+          </span>
+          <p className="font-semibold text-danger">Gagal memuat event</p>
+          <p className="text-sm text-muted">{error}</p>
         </div>
       ) : (
         <>
           <EventGrid events={events} />
-          <div className="flex items-center justify-between text-sm">
-            <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border border-[#E5E7EB] px-3 py-1 disabled:opacity-50">Sebelumnya</button>
-            <span className="text-[#737373]">Halaman {page} dari {Math.max(1, totalPages)}</span>
-            <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border border-[#E5E7EB] px-3 py-1 disabled:opacity-50">Berikutnya</button>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <Button variant="secondary" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <ChevronLeft size={16} /> Sebelumnya
+            </Button>
+            <span className="text-muted">
+              Halaman {page} dari {Math.max(1, totalPages)}
+            </span>
+            <Button variant="secondary" type="button" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+              Berikutnya <ChevronRight size={16} />
+            </Button>
           </div>
         </>
       )}

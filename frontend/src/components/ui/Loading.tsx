@@ -2,9 +2,9 @@
 
 export function Loading({ text = "Memuat..." }: { text?: string }) {
   return (
-    <div className="flex items-center justify-center py-10">
-      <div className="flex items-center gap-2 text-sm text-[#737373]">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#E5E7EB] border-t-[#FF6A00]" />
+    <div className="flex items-center justify-center py-12">
+      <div className="flex items-center gap-2.5 text-sm text-muted">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-line border-t-brand" />
         {text}
       </div>
     </div>

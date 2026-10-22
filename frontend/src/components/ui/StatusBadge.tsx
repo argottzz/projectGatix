@@ -4,9 +4,9 @@ import { cn } from "../../lib/utils";
 import type { RegistrationStatus } from "../../types/registration";
 
 const map: Record<RegistrationStatus, string> = {
-  pending: "bg-[#F59E0B]/15 text-[#B45309]",
-  approved: "bg-[#16A34A]/15 text-[#15803D]",
-  cancelled: "bg-[#DC2626]/15 text-[#B91C1C]",
+  pending: "bg-warning-soft text-warning ring-warning/20",
+  approved: "bg-success-soft text-success ring-success/20",
+  cancelled: "bg-danger-soft text-danger ring-danger/20",
 };
 
 const label: Record<RegistrationStatus, string> = {
@@ -17,7 +17,13 @@ const label: Record<RegistrationStatus, string> = {
 
 export function StatusBadge({ status }: { status: RegistrationStatus }) {
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", map[status])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
+        map[status],
+      )}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {label[status]}
     </span>
   );

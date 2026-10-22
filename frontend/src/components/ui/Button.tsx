@@ -10,13 +10,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({ variant = "primary", loading, className, children, disabled, ...rest }: ButtonProps) {
   const styles =
     variant === "primary"
-      ? "bg-[#FF6A00] text-black hover:bg-[#E65F00]"
+      ? "bg-brand text-white hover:bg-brand-hover"
       : variant === "danger"
-        ? "bg-[#DC2626] text-white hover:opacity-90"
-        : "bg-white text-[#161616] border border-[#E5E7EB] hover:bg-[#F7F8FA]";
+        ? "border border-danger/20 bg-danger-soft text-danger hover:bg-danger hover:text-white"
+        : "border border-line bg-white text-ink hover:border-brand-line hover:bg-brand-soft hover:text-brand";
   return (
     <button
-      className={cn("rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6A00]/40 focus-visible:ring-offset-1", styles, className)}
+      className={cn(
+        "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2",
+        styles,
+        className,
+      )}
       disabled={disabled || loading}
       {...rest}
     >

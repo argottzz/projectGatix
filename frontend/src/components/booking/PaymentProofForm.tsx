@@ -11,9 +11,9 @@ export function PaymentProofForm({ registrationId, onDone }: { registrationId: n
   const [loading, setLoading] = useState(false);
 
   return (
-    <Card className="p-4">
+    <Card className="p-5">
       <form
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-3"
         onSubmit={async (e) => {
           e.preventDefault();
           if (!file) {
@@ -32,14 +32,16 @@ export function PaymentProofForm({ registrationId, onDone }: { registrationId: n
           }
         }}
       >
-        <p className="text-sm font-bold text-[#161616]">Upload bukti pembayaran</p>
+        <div>
+          <p className="text-sm font-bold text-ink">Upload bukti pembayaran</p>
+          <p className="text-xs text-muted">Maksimal 5 MB, format jpg/jpeg/png.</p>
+        </div>
         <input
           type="file"
           accept=".jpg,.jpeg,.png"
-          className="text-sm"
+          className="block w-full cursor-pointer rounded-xl border border-dashed border-line bg-surface-alt px-3 py-4 text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:border-brand-line"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <p className="text-xs text-[#737373]">Maksimal 5 MB, format jpg/jpeg/png.</p>
         <Button type="submit" loading={loading}>Unggah bukti</Button>
       </form>
     </Card>

@@ -123,11 +123,10 @@ src/
 │  ├─ events/                 # page.tsx (daftar), [id]/page.tsx (detail)
 │  ├─ login/, register/
 │  ├─ my-tickets/             # page.tsx, [id]/page.tsx
-│  ├─ organizer/              # page.tsx (dashboard), events/, events/create/, events/[id]/edit/,
-│  │                          # registrations/, profile/
-│  └─ about/, help/, privacy/, terms/
+│  └─ organizer/              # page.tsx (dashboard), events/, events/create/, events/[id]/edit/,
+│                             # registrations/, profile/
 ├─ components/
-│  ├─ ui/                     # Button, Input, Card, Loading, StatusBadge
+│  ├─ ui/                     # Button, Input, Select, Textarea, Card, Loading, StatusBadge
 │  ├─ layout/                 # Navbar, Footer, OrganizerSidebar
 │  ├─ home/                   # HeroSection, SearchPanel, CategoryList, FeaturedEvents, PopularEvents, categories.ts
 │  ├─ events/                 # EventCard, EventGrid, EventFilters
@@ -531,7 +530,7 @@ DELETE /events/:id (verifyToken + requireRole organizer)
 1. **Skema database tidak ter-version.** Tidak ada `.sql`/migration; pemulihan/replikasi struktur bergantung pada database yang sudah ada. (Risiko tertinggi untuk onboarding & deploy.)
 2. **Token JWT disimpan di `localStorage`** → rentan terhadap XSS; tidak ada refresh token.
 3. **Kontrak API belum tervalidasi tipe secara end-to-end** → tipe frontend (`types/*`) dan bentuk respons backend dijaga manual; tidak ada test kontrak otomatis.
-4. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. Teks `/privacy` sudah diselaraskan (bukti hanya ditampilkan ke pemilik tiket & organizer), namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
+4. **Media Cloudinary bersifat publik** — URL tidak bertanda tangan; siapa pun yang memiliki URL dapat mengakses bukti pembayaran. UI hanya menampilkan bukti ke pemilik tiket & organizer, namun akses publik via URL masih mungkin. Solusi (signed/authenticated delivery) dicatat sebagai rekomendasi.
 5. **Kredensial asli pernah ter-commit.** Nilai asli Cloudinary & `JWT_SECRET` sebelumnya ada di `backend/.env.example` dan **masih tersimpan di riwayat git**. Berkas contoh kini memakai placeholder, tetapi nilai lama perlu **dirotasi** (ganti API key/secret Cloudinary dan `JWT_SECRET`). Nilai tidak dicantumkan di dokumen ini.
 6. **Halaman organizer events tanpa paginasi** (`limit: 50`).
 7. **Tidak ada test otomatis** (script `test` hanya placeholder) dan tidak ada CI.

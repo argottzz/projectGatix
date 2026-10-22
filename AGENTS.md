@@ -82,9 +82,10 @@
 - Jangan menuliskan secret/kredensial ke kode atau dokumentasi. `backend/.env.example` memakai placeholder (isi nilai asli hanya di `backend/.env` yang git-ignored) — **jangan menyalinnya ke dokumen atau berkas lain**.
 
 ### Styling & UI Components
-- Warna ditulis sebagai nilai heksadesimal langsung (mis. `text-[#161616]`, `bg-[#FF6A00]`). Ikuti pola ini; **jangan** mulai memakai token CSS (`text-foreground`, `bg-primary`) kecuali tugasnya memang merapikan token (harus disetujui, karena menyentuh banyak file).
-- Utamakan komponen yang sudah ada: `Button`, `Input`, `Card`, `Loading`, `StatusBadge`. Jangan membuat duplikatnya.
-- Pertahankan border `border-[#E5E7EB]`, radius `rounded-lg`/`rounded-xl`/`rounded-2xl`, dan bayangan halus yang sudah konsisten.
+- Warna **wajib memakai token** yang didefinisikan di `frontend/src/app/globals.css` (`bg-brand`, `text-ink`, `border-line`, `bg-surface-alt`, dst.). Brand: `#74070E`, dasar: `#FFFFFF`. Jangan menulis hex langsung untuk warna baru; tambahkan token bila perlu.
+- Judul memakai `font-display` (Instrument Serif); teks UI memakai font sans (Geist).
+- Utamakan komponen yang sudah ada: `Button`, `Input`, `Select`, `Textarea`, `Card`, `Loading`, `StatusBadge`. Jangan membuat duplikatnya.
+- Pertahankan border `border-line`, radius `rounded-xl`/`rounded-2xl`/`rounded-3xl`, serta bayangan `shadow-card`/`shadow-lift`.
 - Perubahan visual yang tidak diminta **tidak boleh** dilakukan. Bila memperbaiki UI, jelaskan dan pertahankan bahasa Indonesia pada teks.
 
 ---

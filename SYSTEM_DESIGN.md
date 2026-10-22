@@ -1,174 +1,151 @@
 # SYSTEM_DESIGN.md — UI/UX & Visual Design System
 
-> Dokumen ini mendokumentasikan **design system yang benar-benar diterapkan** pada GATIX, diambil dari kode sumber dan konfigurasi (bukan dari screenshot/tebakan).
+> Dokumen ini mendokumentasikan **design system yang benar-benar diterapkan** pada GATIX setelah redesign UI, diambil dari kode sumber (bukan dari screenshot/tebakan).
 > Semua nilai warna/ukuran adalah nilai aktual dari kode, kecuali ditandai *estimasi*.
 >
 > Dokumentasi terkait: [`PRD.md`](./PRD.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`AGENTS.md`](./AGENTS.md).
 
-Sumber utama: `frontend/src/app/globals.css`, `frontend/src/app/layout.tsx`, `frontend/src/components/**`, `frontend/next.config.ts`, `frontend/src/lib/utils.ts`.
+Sumber utama: `frontend/src/app/globals.css`, `frontend/src/app/layout.tsx`, `frontend/src/components/**`.
 
 ---
 
 ## 1. Design Overview
 
-**Karakter visual:** bersih, modern, terang (light theme) dengan aksen oranye yang kuat. Gaya khas marketplace: kartu membulat, border tipis abu muda, dan bayangan yang sangat halus.
+**Karakter visual:** premium editorial — permukaan putih bersih dengan identitas maroon tua yang kuat, tipografi judul serif, kartu bersudut besar, garis tipis, dan motif *ticket stub*.
 
-**Prinsip yang terlihat dari implementasi:**
+**Prinsip yang diterapkan:**
 
-- **Dominasi putih + satu aksen.** Hampir semua permukaan `bg-white`, aksen tunggal `#FF6A00` (primary).
-- **Bentuk lembut:** sudut `rounded-lg`, `rounded-xl`, `rounded-2xl`; elemen kecil memakai `rounded-full` (badge, chip, tombol nav mobile).
-- **Border halus sebagai pemisah** (`border border-[#E5E7EB]`) alih-alih bayangan tebal.
-- **Hierarki tipografi lewat weight**, bukan warna: judul `font-extrabold`, label `font-semibold`/`font-medium`, teks sekunder `text-[#737373]`.
-- **Kontras gelap-terang:** hero memakai panel gelap `#161616` dengan teks putih sebagai pemisah visual dari halaman putih.
+- **Dua warna inti:** putih `#FFFFFF` sebagai kanvas dan maroon `#74070E` sebagai identitas (hero, CTA, harga, link aktif, focus ring).
+- **Tipografi kontras:** judul memakai **Instrument Serif** (`font-display`), teks UI memakai **Geist**.
+- **Bentuk tegas:** kartu `rounded-2xl`, hero/panel `rounded-3xl`, tombol `rounded-xl`, badge pill.
+- **Border halus + bayangan hangat** sebagai pemisah, bukan blok abu-abu.
+- **Motif tiket:** garis putus-putus (`border-dashed`), badge tanggal/harga di atas banner, panel ringkasan bergaya tiket.
+- **Warna status tetap semantik** (hijau/kuning/merah lembut) agar tidak tertukar dengan brand.
 
 ---
 
 ## 2. Color Palette
 
-Token warna didefinisikan di `frontend/src/app/globals.css` (`:root` + `@theme inline`):
+Seluruh warna didefinisikan sebagai token di `frontend/src/app/globals.css` (`:root` + `@theme inline`) dan **dipakai lewat utility Tailwind** (mis. `bg-brand`, `text-ink`, `border-line`). Tidak ada hex langsung di komponen.
 
-```css
-:root {
-  --background: #ffffff;
-  --foreground: #161616;
-  --primary: #ff6a00;
-  --primary-hover: #e65f00;
-  --secondary-bg: #f7f8fa;
-  --secondary-text: #737373;
-  --border: #e5e7eb;
-  --success: #16a34a;
-  --warning: #f59e0b;
-  --danger: #dc2626;
-}
-```
+| Token | Utility contoh | Nilai | Penggunaan |
+|---|---|---|---|
+| `brand` | `bg-brand`, `text-brand` | `#74070E` | CTA utama, logo mark, link aktif, harga, focus ring, hero |
+| `brand-hover` | `hover:bg-brand-hover` | `#5A050B` | Hover tombol primary |
+| `brand-soft` | `bg-brand-soft` | `#FBF1F1` | Chip/badge, panel ringan, avatar |
+| `brand-line` | `border-brand-line` | `#EFDCDC` | Border panel/chip brand |
+| `ink` | `text-ink` | `#1B1315` | Judul & teks utama |
+| `muted` | `text-muted` | `#6F6264` | Teks sekunder, label, metadata |
+| `line` | `border-line` | `#E8E0E0` | Border kartu, input, pemisah |
+| `surface` | `bg-surface` | `#FFFFFF` | Body, kartu, navbar |
+| `surface-alt` | `bg-surface-alt` | `#FAF7F7` | Footer, panel dalam, hover |
+| `success` / `success-soft` | `text-success`, `bg-success-soft` | `#157347` / `#ECFDF3` | Status `approved` |
+| `warning` / `warning-soft` | `text-warning`, `bg-warning-soft` | `#B45309` / `#FFFAF1` | Status `pending` |
+| `danger` / `danger-soft` | `text-danger`, `bg-danger-soft` | `#B42318` / `#FEF3F2` | Status `cancelled`, tombol bahaya, pesan error |
 
-| Fungsi | Nilai | Penggunaan nyata (contoh) |
-|---|---|---|
-| **Primary (aksen)** | `#FF6A00` | Tombol utama (`Button` primary), harga, link aktif, judul nav aktif, hero highlight, badge hero |
-| **Primary hover** | `#E65F00` | `hover:bg-[#E65F00]` pada Button primary |
-| **Foreground / teks utama** | `#161616` | Body text, judul, `text-[#161616]` di hampir semua komponen |
-| **Background** | `#FFFFFF` | `body`, kartu, navbar, footer panel |
-| **Surface sekunder** | `#F7F8FA` | Latar banner tanpa gambar (`bg-[#F7F8FA]`), footer, hover tombol sekunder, pemisah baris di dashboard (`border-[#F7F8FA]`) |
-| **Teks sekunder / muted** | `#737373` | Deskripsi, label kecil, metadata tanggal/lokasi |
-| **Border** | `#E5E7EB` | Border kartu, input, tombol sekunder, navbar, footer |
-| **Success** | `#16A34A` | Badge status `approved` (geser + teks `#15803D`) |
-| **Warning** | `#F59E0B` | Badge status `pending` (geser + teks `#B45309`), kartu notice |
-| **Danger** | `#DC2626` | Tombol `danger`, pesan error (`text-[#DC2626]`), badge `cancelled` (teks `#B91C1C`) |
+**Kontras:** `#74070E` di atas putih (dan putih di atas maroon) ≈ **11,9:1**, memenuhi WCAG AA/AAA untuk teks normal.
 
-**Warna status badge** (`frontend/src/components/ui/StatusBadge.tsx`) — kombinasi latar transparan (`/15`) + teks gelap:
+**Warna status badge** (`components/ui/StatusBadge.tsx`) — latar soft + teks + ring + titik indikator:
 
-| Status | Latar | Teks |
-|---|---|---|
-| `pending` | `#F59E0B` @ 15% | `#B45309` |
-| `approved` | `#16A34A` @ 15% | `#15803D` |
-| `cancelled` | `#DC2626` @ 15% | `#B91C1C` |
+| Status | Latar | Teks | Ring |
+|---|---|---|---|
+| `pending` | `#FFFAF1` | `#B45309` | `#B45309` @ 20% |
+| `approved` | `#ECFDF3` | `#157347` | `#157347` @ 20% |
+| `cancelled` | `#FEF3F2` | `#B42318` | `#B42318` @ 20% |
 
-**Warna lain yang dipakai:**
+**Bayangan & focus:**
 
-- Teks di panel gelap hero: `text-white` dan `text-white/70` (subjudul).
-- Teks pada tombol primary: `text-black` (di atas `#FF6A00`).
-- Bayangan: `shadow-[0_1px_3px_rgba(0,0,0,0.06)]` (kartu), `shadow-[0_4px_16px_rgba(0,0,0,0.08)]` (panel search), `shadow-lg` (dropdown akun).
-
-> ⚠️ **Catatan penting:** token `--primary`, `--foreground`, dst. **didefinisikan tetapi tidak dipakai** — komponen menulis nilai HEX langsung (mis. `text-[#161616]`, bukan `text-foreground`). Jadi mengubah token di `globals.css` **tidak** mengubah tampilan. Lihat §9.
+- `shadow-card`: `0 1px 2px rgba(27,19,21,0.05), 0 12px 32px -24px rgba(27,19,21,0.45)`
+- `shadow-lift`: `0 20px 44px -24px rgba(116,7,14,0.35)`
+- Focus ring: `focus-visible:ring-2 focus-visible:ring-brand/30` (tombol) dan `focus:ring-4 focus:ring-brand/10` (input).
+- Seleksi teks: latar `brand`, teks putih (`::selection`).
 
 ---
 
 ## 3. Typography
 
-**Font yang dimuat** (`frontend/src/app/layout.tsx`):
+**Font yang dimuat** (`frontend/src/app/layout.tsx`, `next/font/google`):
 
-- `Geist` (`next/font/google`) → variabel CSS `--font-geist-sans`
-- `Geist_Mono` (`next/font/google`) → variabel CSS `--font-geist-mono`
+- `Geist` → `--font-geist-sans` → utility `font-sans` (teks UI).
+- `Instrument_Serif` (weight 400, normal + italic) → `--font-instrument-serif` → utility `font-display` (judul).
+- `Geist_Mono` → `--font-geist-mono` → utility `font-mono`.
 
-Dipetakan di `globals.css`:
-```css
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-```
-
-Elemen `body` tidak menetapkan `font-family` sendiri, sehingga teks mewarisi font dari `html` yang diatur preflight Tailwind memakai `--font-sans` → `var(--font-geist-sans)`. Dengan begitu **font yang benar-benar dirender adalah Geist**.
-
-**Hierarki ukuran (class Tailwind yang dipakai aktual):**
+**Hierarki ukuran (class aktual):**
 
 | Elemen | Class | Contoh |
 |---|---|---|
-| Judul hero | `text-3xl md:text-5xl font-extrabold` | `HeroSection` |
-| Judul halaman | `text-2xl font-extrabold` | "Jelajahi Event", "Tiket Saya" |
-| Judul section | `text-xl font-extrabold` | "Jelajahi Kategori", "Event Pilihan" |
-| Judul kartu / panel | `text-base` / `text-lg font-bold` | nama event, "Ringkasan Pemesanan" |
+| Judul hero | `font-display text-4xl md:text-6xl tracking-tight` | `HeroSection` |
+| Judul halaman | `font-display text-3xl md:text-4xl tracking-tight` | `/events`, `/my-tickets`, dashboard |
+| Judul section | `font-display text-2xl md:text-3xl tracking-tight` | beranda |
+| Judul kartu/panel | `text-base font-bold` / `text-lg font-extrabold` | nama event, angka statistik |
 | Body | `text-sm` | deskripsi, isi form |
-| Metadata / caption | `text-xs` | tanggal, lokasi, catatan |
+| Metadata/caption | `text-xs` | tanggal, lokasi, catatan |
+| Label form | `text-[11px] font-semibold uppercase tracking-[0.08em]` | `Input`, `Select`, `Textarea` |
 
-**Weight:** `font-extrabold` (judul), `font-bold`, `font-semibold` (tombol/chip/label), `font-medium` (label input, link nav), default untuk body.
-**Line-height:** tidak diatur eksplisit kecuali `leading-relaxed` pada halaman statis (`about`, `privacy`, `terms`).
+**Weight:** `font-extrabold` (angka/statistik), `font-bold` (judul kartu), `font-semibold` (tombol, chip, label), `font-medium` (link nav, teks penting).
+**Italic** dipakai untuk satu kata penekanan di hero ("Favoritmu").
 
 ---
 
 ## 4. Layout and Spacing
 
-**Struktur layout global** (`frontend/src/app/layout.tsx`):
+**Struktur global** (`frontend/src/app/layout.tsx`):
 
-- `body`: `flex min-h-full flex-col bg-white text-[#161616]`
-- `<Navbar />` (sticky) → `<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">` → `<Footer />` → `<Toaster />`
+- `body`: `flex min-h-full flex-col bg-surface text-ink`
+- `<Navbar />` (sticky, blur) → `<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:py-10">` → `<Footer />` → `<Toaster />`
 
-**Lebar konten:**
+**Lebar & spacing:**
 
-| Konteks | Max width | Bukti |
-|---|---|---|
-| Kontainer utama, navbar, footer | `max-w-6xl` (72rem) | `layout.tsx`, `Navbar.tsx`, `Footer.tsx` |
-| Hero search panel | `max-w-3xl` | `HeroSection.tsx` |
-| Halaman statis (about/help/privacy/terms) | `max-w-2xl` | halaman masing-masing |
-| Form event (create/edit) | `max-w-xl` | `organizer/events/create`, `.../[id]/edit` |
-| Form login/register/profil | `max-w-md` | `login`, `register`, `organizer/profile` |
-| Sidebar organizer | `md:w-56` | `OrganizerSidebar.tsx` |
+| Konteks | Nilai |
+|---|---|
+| Kontainer utama, navbar, footer | `max-w-6xl` |
+| Hero search panel | `max-w-3xl` |
+| Panel autentikasi | `max-w-4xl`, grid `md:grid-cols-[0.9fr_1.1fr]` |
+| Form event / profil | `max-w-xl` |
+| Sidebar organizer | `md:w-60`, `md:sticky md:top-24` |
+| Detail event | `lg:grid-cols-[1fr_340px]` |
+| Detail tiket | `lg:grid-cols-[1fr_320px]` |
 
-**Spacing & grid:**
+**Grid:**
 
-- Padding halaman: `px-4 py-6`; section utama: `gap-10` (beranda), `gap-4` (umum).
-- Kartu: `p-4` (kartu data), `p-6` (panel/form), grid `gap-3`/`gap-4`.
-- Grid event: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` (default) atau `lg:grid-cols-4` (beranda).
-- Grid kategori: `grid grid-cols-3 gap-3 sm:grid-cols-6`.
-- Footer: `grid gap-6 md:grid-cols-4`.
-- Layout organizer & detail event: `flex flex-col gap-4 md:flex-row`.
+- Event: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` (default) atau `lg:grid-cols-4` (beranda).
+- Kategori: `grid-cols-3 sm:grid-cols-6`.
+- Statistik organizer: `sm:grid-cols-3`.
+- Footer: 1 kolom → `md:grid-cols-[1.6fr_1fr_1fr]`.
 
-**Breakpoint (default Tailwind v4):** dipakai `sm:` (≥640px), `md:` (≥768px), `lg:` (≥1024px). Tidak ada breakpoint kustom.
+**Breakpoint:** `sm` (≥640px), `md` (≥768px), `lg` (≥1024px). Tanpa breakpoint kustom.
 
 ---
 
 ## 5. UI Components
 
-Komponen yang **benar-benar ada** beserta lokasi & variasinya:
-
 | Komponen | Lokasi | Fungsi & variasi |
 |---|---|---|
-| **Button** | `components/ui/Button.tsx` | Props `variant: "primary" \| "secondary" \| "danger"`, `loading`. Primary `bg-[#FF6A00] text-black hover:bg-[#E65F00]`; danger `bg-[#DC2626] text-white`; secondary `bg-white border`. Saat `loading`, teks diganti `"Memproses..."` dan tombol `disabled`. Radius `rounded-lg`, `px-4 py-2 text-sm font-semibold`. |
-| **Input** | `components/ui/Input.tsx` | Input teks + `label` opsional + `error` (teks merah `text-xs text-[#DC2626]`). Focus: `focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30`. |
-| **Card** | `components/ui/Card.tsx` | Kontainer putih `rounded-xl border border-[#E5E7EB] shadow-[0_1px_3px_rgba(0,0,0,0.06)]`, terima `className`. |
-| **Loading** | `components/ui/Loading.tsx` | Spinner (`animate-spin`, border abu dengan `border-t-[#FF6A00]`) + teks (default "Memuat..."). |
-| **StatusBadge** | `components/ui/StatusBadge.tsx` | Badge status tiket (`pending`/`approved`/`cancelled`) dengan label Indonesia (Menunggu/Disetujui/Dibatalkan), pill `rounded-full px-2.5 py-1 text-xs font-semibold`. |
-| **Navbar** | `components/layout/Navbar.tsx` | Sticky header. Berisi logo GATIX, `NavLinks` (desktop), `AccountMenu` (dropdown akun / tombol Login+Registrasi), `MobileNav`. Dropdown dibuka/tutup lewat klik luar (`mousedown` listener). |
-| **OrganizerSidebar** | `components/layout/OrganizerSidebar.tsx` | Menu organizer: Dashboard, Event Saya, Tambah Event, Pendaftaran, Profil. Item aktif `bg-[#FF6A00]/10 text-[#FF6A00]`. |
-| **Footer** | `components/layout/Footer.tsx` | 4 kolom: brand, navigasi, tentang, informasi. Latar `#F7F8FA`. |
-| **Toast** | `sonner` (`layout.tsx`: `<Toaster position="top-center" richColors />`) | Notifikasi sukses/gagal. |
-| **EventCard** | `components/events/EventCard.tsx` | Kartu event: banner (`h-40`, fallback "Tanpa banner"), judul `line-clamp-1`, tanggal, lokasi, harga, tombol "Lihat Detail". |
-| **EventGrid** | `components/events/EventGrid.tsx` | Grid `EventCard` + empty state ("Belum ada event"). |
-| **EventFilters** | `components/events/EventFilters.tsx` | Chip kategori + form filter (cari, lokasi, tanggal dari/sampai, urutkan, tombol Cari). |
-| **FeaturedEvents** | `components/home/FeaturedEvents.tsx` | Section judul + subtitle + link "Lihat Semua" + `EventGrid`. |
-| **HeroSection** | `components/home/HeroSection.tsx` | Panel gelap `rounded-2xl bg-[#161616]` berisi badge, judul, subjudul, dan `SearchPanel`. |
-| **SearchPanel** | `components/home/SearchPanel.tsx` | Form pencarian (nama event, lokasi, tanggal) → navigasi ke `/events?...`. |
-| **CategoryList** | `components/home/CategoryList.tsx` | Grid 6 kategori (ikon + label) yang menautkan ke pencarian. |
-| **BookingSummary** | `components/booking/BookingSummary.tsx` | Panel sticky ringkasan pemesanan + tombol "Daftar Sekarang" / "Kuota Habis". |
-| **PaymentProofForm** | `components/booking/PaymentProofForm.tsx` | Input file + tombol unggah bukti. |
-| **TicketCard / TicketStatus** | `components/tickets/*` | Kartu tiket dan badge + deskripsi status. |
+| **Button** | `components/ui/Button.tsx` | `variant: primary \| secondary \| danger`, `loading`. Primary `bg-brand text-white hover:bg-brand-hover`; secondary outline `border-line bg-white hover:bg-brand-soft hover:text-brand`; danger `bg-danger-soft text-danger` yang berubah solid saat hover. Radius `rounded-xl`, `px-4 py-2.5 text-sm font-semibold`. |
+| **Input** | `components/ui/Input.tsx` | Input teks + label uppercase + error. `h-11 rounded-xl border-line`, fokus `border-brand ring-4 ring-brand/10`. |
+| **Select** | `components/ui/Select.tsx` | Select native dengan chevron Lucide, label & error, gaya fokus sama dengan Input. |
+| **Textarea** | `components/ui/Textarea.tsx` | Textarea dengan label & error, gaya fokus sama. |
+| **Card** | `components/ui/Card.tsx` | `rounded-2xl border border-line bg-white shadow-card`; menerima `className` (mis. `p-5`, `p-0`). |
+| **Loading** | `components/ui/Loading.tsx` | Spinner `border-brand-line border-t-brand` + teks (default "Memuat..."). |
+| **StatusBadge** | `components/ui/StatusBadge.tsx` | Pill `rounded-full` + titik indikator; label Indonesia (Menunggu/Disetujui/Dibatalkan). |
+| **Navbar** | `components/layout/Navbar.tsx` | Sticky `bg-white/85 backdrop-blur-md`, logo mark maroon + wordmark `font-display`, link aktif maroon dengan underline, dropdown akun, sub-nav mobile. |
+| **Footer** | `components/layout/Footer.tsx` | 3 kolom (brand, Jelajahi, Organizer) + bottom bar copyright. Latar `surface-alt`. |
+| **OrganizerSidebar** | `components/layout/OrganizerSidebar.tsx` | 5 item ber-ikon; item aktif `bg-brand text-white shadow-lift`, lainnya hover `surface-alt`. |
+| **HeroSection** | `components/home/HeroSection.tsx` | Panel maroon `rounded-3xl` + ornamen lingkaran CSS, badge uppercase, headline serif, `SearchPanel`, tiga highlight. |
+| **SearchPanel** | `components/home/SearchPanel.tsx` | Form nama/lokasi/tanggal → `/events?...`; panel putih `rounded-2xl shadow-lift`. |
+| **CategoryList** | `components/home/CategoryList.tsx` | 6 kartu kategori dengan ikon di kotak `brand-soft` berubah maroon solid saat hover. |
+| **FeaturedEvents** | `components/home/FeaturedEvents.tsx` | Header section serif + link "Lihat Semua" + `EventGrid`. |
+| **EventCard** | `components/events/EventCard.tsx` | Banner `h-44`, chip harga di atas gambar, meta tanggal/lokasi, tombol primary full-width; hover lift. |
+| **EventGrid** | `components/events/EventGrid.tsx` | Grid kartu + empty state ber-ikon. |
+| **EventFilters** | `components/events/EventFilters.tsx` | Chip kategori (aktif solid maroon) + panel filter (Input, Select, Button). |
+| **BookingSummary** | `components/booking/BookingSummary.tsx` | Panel ringkasan bergaya tiket: header maroon berisi harga, garis putus-putus, rincian, CTA. Sticky di `lg`. |
+| **PaymentProofForm** | `components/booking/PaymentProofForm.tsx` | File input bergaya drop area (`border-dashed`, tombol `file:` maroon) + tombol unggah. |
+| **TicketCard / TicketStatus** | `components/tickets/*` | Kartu tiket horizontal di `sm`, badge status + deskripsi. |
 
-**Komponen yang TIDAK ada (terverifikasi):**
+**Komponen yang tidak ada:**
 
-- **Modal/Dialog:** tidak ada. Komponen `components/ui/Modal.tsx` pernah ada tetapi **sudah dihapus** (tidak dipakai) pada commit `52b887c`.
-- **Table:** tidak ada `<table>`; daftar memakai `div` bertumpuk.
-- **Alert:** tidak ada komponen alert khusus; feedback memakai toast atau kartu statis.
-- **Dropdown:** hanya dropdown akun di `Navbar` (bukan komponen reusable).
+- Modal/Dialog, Table, Alert, dan komponen dropdown reusable (dropdown hanya di Navbar).
+- Halaman statis (`about`, `help`, `privacy`, `terms`) sudah dihapus.
 
 ---
 
@@ -176,71 +153,67 @@ Komponen yang **benar-benar ada** beserta lokasi & variasinya:
 
 | Route | Struktur visual | Komponen utama |
 |---|---|---|
-| `/` (Beranda) | Hero gelap + search → daftar kategori → "Event Pilihan" → panel "Cari Event di Sekitarmu" (input kota) → "Jangan Lewatkan Event Ini" | `HeroSection`, `CategoryList`, `FeaturedEvents`, `PopularEvents` |
-| `/events` | Judul "Jelajahi Event" → `EventFilters` → grid event → kontrol paginasi | `EventFilters`, `EventGrid`, `Loading` |
-| `/events/[id]` | Grid 2 kolom (`md:grid-cols-[1fr_320px]`): kiri banner + judul + meta + harga + deskripsi + penyelenggara; kanan `BookingSummary` sticky | `BookingSummary` |
-| `/login`, `/register` | Panel `max-w-md` terpusat, form vertikal | `Input`, `Button` |
-| `/my-tickets` | Judul → tab status (Semua/Menunggu/Disetujui/Dibatalkan) → grid tiket | `TicketCard` |
-| `/my-tickets/[id]` | Header judul + `TicketStatus`; panel detail; `PaymentProofForm` (jika pending); tombol Batalkan | `TicketStatus`, `PaymentProofForm` |
-| `/organizer` | Sidebar + dashboard: 3 kartu statistik, kartu "Menunggu pemeriksaan", kartu "Event terbaru" | `OrganizerSidebar`, `Card`, `StatusBadge` |
-| `/organizer/events` | Sidebar + daftar event dengan aksi edit/hapus | `OrganizerSidebar` |
-| `/organizer/events/create` | Sidebar + form `max-w-xl` (multipart + banner) | `Input`, `Button` |
-| `/organizer/events/[id]/edit` | Sama seperti create, dengan nilai terisi | `Input`, `Button` |
-| `/organizer/registrations` | Sidebar + dropdown pilih event + daftar peserta dengan aksi Setujui/Batalkan | `StatusBadge`, `Button` |
-| `/organizer/profile` | Sidebar + panel `max-w-md` (form nama + kartu "Jadi Organizer") | `Input`, `Button` |
-| `/about`, `/help`, `/privacy`, `/terms` | Konten statis `max-w-2xl` | — |
+| `/` | Hero maroon + search → kategori → "Event Pilihan" → panel "Cari Event di Sekitarmu" → "Jangan Lewatkan Event Ini" → "Cara kerja GATIX" → CTA organizer | `HeroSection`, `CategoryList`, `FeaturedEvents`, `PopularEvents` |
+| `/events` | Kicker + judul serif → chip kategori → panel filter → grid event → paginasi | `EventFilters`, `EventGrid`, `Loading`, `Button` |
+| `/events/[id]` | Breadcrumb kembali → banner → judul + pill meta → kartu deskripsi → kartu penyelenggara → notice; ringkasan pemesanan sticky di kanan | `BookingSummary` |
+| `/login` | Kartu dua kolom: panel maroon (brand + benefit) + form putih; satu kolom di mobile | `Input`, `Button` |
+| `/register` | Sama seperti login, empat field + konfirmasi password | `Input`, `Button` |
+| `/my-tickets` | Kicker + judul → segmented tab status → grid kartu tiket | `TicketCard`, `StatusBadge` |
+| `/my-tickets/[id]` | Breadcrumb → judul; kartu detail + status & aksi; form bukti pembayaran jika pending | `TicketStatus`, `PaymentProofForm`, `Button` |
+| `/organizer` | Sidebar + judul; 3 kartu statistik (2 metrik + CTA); daftar "Menunggu pemeriksaan" & "Event terbaru" dengan progress kuota | `OrganizerSidebar`, `Card`, `StatusBadge` |
+| `/organizer/events` | Sidebar + header aksi; daftar event ber-ikon dengan tombol edit/hapus | `OrganizerSidebar` |
+| `/organizer/events/create` | Sidebar + form bersection (informasi, waktu & lokasi, harga & kuota, banner) | `Input`, `Textarea`, `Button`, `Card` |
+| `/organizer/events/[id]/edit` | Sama seperti create, nilai terisi; banner opsional | `Input`, `Textarea`, `Button`, `Card` |
+| `/organizer/registrations` | Sidebar + pemilih event + daftar peserta (avatar, bukti, status, aksi) | `Select`, `StatusBadge`, `Button` |
+| `/organizer/profile` | Sidebar + kartu profil (avatar, form nama, panel "Jadi Organizer") | `Input`, `Button`, `Card` |
 
-Semua halaman dibungkus `main` global (`max-w-6xl`); halaman organizer menambahkan `OrganizerSidebar` di dalam konten.
+Halaman yang dihapus: `/about`, `/help`, `/privacy`, `/terms` (tidak memiliki dukungan backend).
 
 ---
 
 ## 7. Interaction and States
 
-| State | Perilaku aktual | Bukti |
-|---|---|---|
-| **Hover** | Link → `hover:text-[#FF6A00]`; tombol primary → `hover:bg-[#E65F00]`; danger → `hover:opacity-90`; kartu/daftar → `hover:border-[#FF6A00]` atau `hover:bg-[#F7F8FA]` | komponen terkait |
-| **Focus** | `Input`, `select`, dan `textarea` memakai `focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/30`; `Button` memakai `focus-visible:ring-2 focus-visible:ring-[#FF6A00]/40` | `Input.tsx`, `Button.tsx`, `EventFilters.tsx` |
-| **Active (nav)** | Item sidebar/nav aktif: `bg-[#FF6A00]/10 text-[#FF6A00]` | `OrganizerSidebar.tsx`, `Navbar.tsx` |
-| **Disabled** | `disabled:opacity-50` (tombol paginasi, `Button` saat loading) | `Button.tsx`, `events/page.tsx` |
-| **Loading** | (a) `Button` menampilkan "Memproses..."; (b) komponen `Loading` (spinner) dipakai untuk memuat event, tiket, dan halaman organizer. Dashboard `organizer` belum menampilkan indikator loading | `Button.tsx`, `Loading.tsx` |
-| **Error** | Toast (`toast.error`) di hampir semua aksi; **kartu error inline** hanya di `/`, `/events`, `/my-tickets` | `app/page.tsx`, `app/events/page.tsx`, `app/my-tickets/page.tsx` |
-| **Empty** | `EventGrid` ("Belum ada event"), `/my-tickets` ("Belum ada tiket pada tab ini"), daftar pendaftaran ("Belum ada pendaftaran.") | komponen terkait |
-| **Success** | Toast (`toast.success`) setelah login/registrasi/simpan/unggah/approve | komponen terkait |
-| **Notice inline** | Kartu notifikasi oranye di `/events/[id]` saat pendaftaran berbayar (status pending) | `events/[id]/page.tsx` |
+| State | Perilaku aktual |
+|---|---|
+| **Hover** | Link nav → `text-ink`; link brand → `hover:gap-2`; tombol primary → `bg-brand-hover`; kartu → `-translate-y-1` + `border-brand-line` + `shadow-lift`; baris daftar → `bg-surface-alt`. |
+| **Focus** | Input/Select/Textarea: `focus:border-brand focus:ring-4 focus:ring-brand/10`; Button: `focus-visible:ring-2 focus-visible:ring-brand/30`. |
+| **Active (nav)** | Underline maroon di desktop; pill `bg-brand-soft text-brand` di mobile; sidebar organizer `bg-brand text-white`. |
+| **Disabled** | `disabled:opacity-50` + `disabled:pointer-events-none` pada Button. |
+| **Loading** | Button menampilkan "Memproses..."; komponen `Loading` untuk event, tiket, dan halaman organizer. |
+| **Error** | Kartu error inline ber-ikon di `/`, `/events`, `/my-tickets`; halaman lain memakai toast. |
+| **Empty** | Empty state ber-ikon: "Belum ada event", "Belum ada tiket pada tab ini", "Belum ada pendaftaran". |
+| **Success** | Toast Sonner (`richColors`, radius 14px, border `line`). |
+| **Notice** | Kartu inline `border-brand-line bg-brand-soft` di `/events/[id]` setelah pendaftaran berbayar. |
 
 ---
 
 ## 8. Responsive Design
 
-Berdasarkan class aktual:
-
-- **Navbar:** link desktop `hidden md:flex`; sub-nav mobile `md:hidden` (tampil di bawah header pada layar kecil). Logo selalu tampil. Dropdown akun ada di kedua ukuran.
-- **Footer:** 1 kolom di mobile, `md:grid-cols-4` di desktop.
-- **Grid event:** 1 kolom (mobile) → `sm:grid-cols-2` → `lg:grid-cols-3`/`4`.
-- **Grid kategori:** `grid-cols-3` (mobile) → `sm:grid-cols-6`.
-- **Halaman organizer & detail event:** bertumpuk (`flex-col`) di mobile → `md:flex-row` (sidebar/kiri-kanan) di desktop.
-- **Hero:** padding `p-8 md:p-12`; judul `text-3xl md:text-5xl`; panel search `grid-cols-1` → `md:grid-cols-[1fr_1fr_1fr_auto]`.
-- **Form event:** `datetime-local`/`number`/`file` mengikuti lebar kontainer.
+- **Navbar:** link desktop `hidden md:flex`; sub-nav mobile horizontal-scroll `md:hidden`; dropdown akun di kedua ukuran.
+- **Footer:** 1 kolom → 3 kolom di `md`.
+- **Hero:** padding `px-6 py-12` → `md:px-12 md:py-16`; judul `text-4xl` → `md:text-6xl`.
+- **Grid event:** 1 → 2 (`sm`) → 3/4 (`lg`).
+- **Halaman organizer & detail:** bertumpuk `flex-col` → `md:flex-row`; sidebar menjadi sticky di desktop.
+- **Autentikasi:** panel maroon disembunyikan di mobile (`hidden md:flex`).
+- **Form event:** grid harga/kuota `sm:grid-cols-2`; input mengikuti lebar kontainer.
 
 ---
 
 ## 9. Design Consistency
 
-**Inkonsistensi yang benar-benar ditemukan (dengan bukti):**
+**Yang sudah konsisten:**
 
-1. **Token warna tidak dipakai.** `globals.css` mendefinisikan token (`--primary`, `--foreground`, ...) tapi komponen menulis HEX langsung (`text-[#161616]`). Mengubah token tidak berdampak visual.
-2. **Error tidak seragam.** Kartu error inline hanya ada di 3 halaman; halaman lain hanya mengandalkan toast atau templat not-found sederhana.
-3. **`select` dan `textarea` ditulis ad-hoc.** Elemen ini memakai style langsung (bukan komponen `Input`); gaya fokus kini seragam, tetapi markup-nya tetap terduplikasi.
-4. **Kontras tombol primary.** Tombol primary memakai `text-black` di atas `#FF6A00`. Ini nilai aktual; kelayakan kontras sebaiknya diperiksa terpisah (tidak diubah di sini).
-5. **Detail kecil:** judul section kosong pada `<FeaturedEvents title="" />` di beranda (merender `<h2>` kosong untuk daftar "event sekitar").
+1. **Token warna terpusat** di `globals.css` dan dipakai seluruh komponen — mengubah `--brand` mengubah seluruh tampilan.
+2. **Form control seragam** lewat `Input`, `Select`, dan `Textarea`.
+3. **Satu pola state** (empty/error/loading) dengan ikon di dalam lingkaran `brand-soft`/`danger-soft`.
+4. **Hierarki tipografi** konsisten: judul serif, teks UI sans, label uppercase kecil.
 
-**Rekomendasi (terpisah dari implementasi, jangan diterapkan tanpa diminta):**
+**Catatan tersisa:**
 
-- Pindahkan seluruh warna ke token dan pakai `text-foreground`, `bg-primary`, dll., agar theming terpusat.
-- Standardisasi error ke satu pola kartu error.
-- Buat komponen `Select`/`Textarea` bila polanya mulai berulang.
-- Tambahkan indikator `Loading` di dashboard organizer bila data mulai berat.
+- `input[type=file]` masih memakai styling `file:` langsung (dua tempat: banner event dan bukti pembayaran).
+- Halaman dashboard organizer belum menampilkan indikator loading global.
+- Aturan ESLint `react-hooks/set-state-in-effect` melaporkan pola data-fetching lama di beberapa halaman; perilaku tidak diubah pada redesign ini.
 
 ---
 
-*Dokumen ini mencerminkan kondisi pada commit `e6427c6`. Perbarui bila tampilan/design system berubah (lihat `AGENTS.md`).*
+*Dokumen ini mencerminkan kondisi setelah redesign UI dengan palet `#FFFFFF` + `#74070E`. Perbarui bila tampilan/design system berubah (lihat `AGENTS.md`).*

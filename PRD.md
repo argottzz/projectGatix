@@ -13,7 +13,7 @@
 |---|---|---|
 | Nama produk | **GATIX** | `frontend/src/app/layout.tsx` (`title: "GATIX - Event Ticketing Platform"`), `backend/package.json` (`name: "gatix-backend"`) |
 | Jenis produk | Marketplace / platform event ticketing | `frontend/src/components/home/HeroSection.tsx` (label "EVENT TICKETING MARKETPLACE") |
-| Tujuan | Membantu pengguna menemukan event dan mengamankan tiket; membantu organizer membuat & mengelola event serta memverifikasi pembayaran | `frontend/src/app/about/page.tsx`, `frontend/src/app/help/page.tsx` |
+| Tujuan | Membantu pengguna menemukan event dan mengamankan tiket; membantu organizer membuat & mengelola event serta memverifikasi pembayaran | `frontend/src/app/page.tsx`, `frontend/src/components/booking/BookingSummary.tsx` |
 
 **Masalah yang ingin diselesaikan (berdasarkan teks UI aktual):**
 
@@ -97,8 +97,9 @@ Status: **Selesai** = ada implementasi backend + frontend dan terhubung; **Sebag
 | 12 | Dashboard organizer | Total event/peserta + pendaftaran menunggu | `/organizer` → `GET /events`, `GET /events/:id/registrations` | Selesai |
 | 13 | CRUD event | Buat/ubah/hapus event + banner | `/organizer/events*` → `POST/PATCH/DELETE /events` | Selesai |
 | 14 | Manajemen pendaftaran | Setujui/batalkan peserta | `/organizer/registrations` → `PATCH /registrations/:id/status` | Selesai |
-| 15 | Halaman statis | Tentang, Bantuan (FAQ), Privasi, Syarat | `/about`, `/help`, `/privacy`, `/terms` | Selesai |
-| 16 | Notifikasi toast | Feedback sukses/gagal | `sonner` `Toaster` di layout | Selesai |
+| 15 | Notifikasi toast | Feedback sukses/gagal | `sonner` `Toaster` di layout | Selesai |
+
+**Catatan halaman statis:** route `/about`, `/help`, `/privacy`, dan `/terms` dihapus pada redesign UI karena tidak memiliki dukungan backend.
 
 **Catatan fitur #7 (Kategori):** tabel `events` **tidak punya kolom kategori**. Kategori hanya menjalankan pencarian teks (`/events?search=musik`, dst.) lewat `CATEGORIES` di `frontend/src/components/home/categories.ts`. Selain itu, field `category` pada `EventFilters` bersifat **UI-only** — tidak dikirim ke API (`events/page.tsx` tidak meneruskan `category`).
 
@@ -191,7 +192,7 @@ Berdasarkan bukti kode (bukan asumsi):
 6. **Tidak ada endpoint untuk mengubah/menghapus akun** (hanya `PATCH /auth/me` untuk nama).
 7. **Kuota bersifat real-time per request** — tidak ada indikator live/websocket.
 8. **`/organizer/events` memuat maksimum 50 event tanpa paginasi** (`listEvents({ limit: 50 })`).
-9. **Akses berkas bukti pembayaran:** halaman `/privacy` menyatakan bukti hanya ditampilkan kepada pemilik tiket dan organizer, tetapi file disimpan di Cloudinary dengan URL publik — siapa pun yang memiliki tautan dapat membukanya. Perbaikan (signed/authenticated URL) dicatat sebagai rekomendasi di `ARCHITECTURE.md`.
+9. **Akses berkas bukti pembayaran:** bukti hanya ditampilkan kepada pemilik tiket dan organizer di UI, tetapi file disimpan di Cloudinary dengan URL publik — siapa pun yang memiliki tautan dapat membukanya. Perbaikan (signed/authenticated URL) dicatat sebagai rekomendasi di `ARCHITECTURE.md`.
 10. Klaim `Belum terverifikasi`: perilaku runtime penuh (termasuk transaksi kuota bersamaan) **belum diuji end-to-end** karena tidak ada test otomatis dan environment DB/Cloudinary belum dijalankan dalam proses dokumentasi ini.
 
 ---
@@ -206,7 +207,7 @@ Berdasarkan bukti kode (bukan asumsi):
 - **Payment gateway** (mis. Midtrans/Xendit) untuk verifikasi otomatis.
 - **Paginasi** di halaman event organizer dan dashboard yang lebih efisien (`Promise.all`).
 - **Indikator kuota real-time** atau refresh berkala.
-- **Proteksi URL media** (signed/authenticated Cloudinary URL) sesuai klaim privasi.
+- **Proteksi URL media** (signed/authenticated Cloudinary URL) sesuai kebutuhan privasi bukti pembayaran.
 - **Role admin** bila diperlukan moderasi (belum ada sekarang).
 - **Test otomatis** (mis. Vitest/Jest untuk backend, Playwright untuk alur utama).
 

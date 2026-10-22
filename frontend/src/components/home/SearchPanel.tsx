@@ -14,7 +14,7 @@ export function SearchPanel() {
 
   return (
     <form
-      className="grid gap-2 rounded-2xl border border-[#E5E7EB] bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.08)] md:grid-cols-[1fr_1fr_1fr_auto]"
+      className="grid gap-3 rounded-2xl border border-line bg-white p-3 shadow-lift md:grid-cols-[1fr_1fr_1fr_auto]"
       onSubmit={(e) => {
         e.preventDefault();
         const params = new URLSearchParams();
@@ -31,7 +31,9 @@ export function SearchPanel() {
       <Input label="Tanggal" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       <div className="flex items-end">
         <Button type="submit" className="w-full md:w-auto">
-          <span className="inline-flex items-center gap-1"><Search size={15} /> Cari Event</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Search size={15} /> Cari Event
+          </span>
         </Button>
       </div>
     </form>

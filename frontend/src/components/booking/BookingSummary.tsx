@@ -16,21 +16,39 @@ export function BookingSummary({
 }) {
   const soldOut = (event.available_quota ?? 1) <= 0;
   return (
-    <Card className="sticky top-20 p-4">
-      <p className="text-sm font-bold text-[#161616]">Ringkasan Pemesanan</p>
-      <p className="mt-2 line-clamp-1 text-sm text-[#737373]">{event.title}</p>
-      <p className="text-xs text-[#737373]">{formatDate(event.date)} • {event.location}</p>
-      <div className="mt-3 flex items-center justify-between border-t border-[#E5E7EB] pt-3">
-        <span className="text-sm text-[#737373]">Harga tiket</span>
-        <span className="text-lg font-extrabold text-[#FF6A00]">{formatPrice(event.price)}</span>
+    <Card className="overflow-hidden p-0 lg:sticky lg:top-24">
+      <div className="bg-brand px-5 py-5 text-white">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
+          Ringkasan pemesanan
+        </p>
+        <p className="mt-2 font-display text-3xl leading-none">{formatPrice(event.price)}</p>
+        <p className="mt-1 text-xs text-white/70">
+          {Number(event.price) === 0 ? "Event gratis" : "Event berbayar"}
+        </p>
       </div>
-      <p className="mt-1 text-xs text-[#737373]">
-        {Number(event.price) === 0 ? "Event gratis — pendaftaran langsung disetujui." : "Event berbayar — unggah bukti pembayaran setelah mendaftar."}
-      </p>
-      <p className="mt-1 text-xs text-[#737373]">Sisa kuota: {event.available_quota ?? "-"}</p>
-      <Button className="mt-3 w-full" loading={registering} disabled={soldOut} onClick={onBook}>
-        {soldOut ? "Kuota Habis" : "Daftar Sekarang"}
-      </Button>
+      <div className="flex flex-col gap-3 p-5">
+        <p className="line-clamp-2 text-sm font-bold text-ink">{event.title}</p>
+        <p className="text-xs text-muted">
+          {formatDate(event.date)} • {event.location}
+        </p>
+        <div className="border-t border-dashed border-line" />
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span>Harga tiket</span>
+          <span className="font-semibold text-ink">{formatPrice(event.price)}</span>
+        </div>
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span>Sisa kuota</span>
+          <span className="font-semibold text-ink">{event.available_quota ?? "-"}</span>
+        </div>
+        <p className="text-xs leading-relaxed text-muted">
+          {Number(event.price) === 0
+            ? "Event gratis — pendaftaran langsung disetujui."
+            : "Event berbayar — unggah bukti pembayaran setelah mendaftar."}
+        </p>
+        <Button className="mt-1 w-full" loading={registering} disabled={soldOut} onClick={onBook}>
+          {soldOut ? "Kuota Habis" : "Daftar Sekarang"}
+        </Button>
+      </div>
     </Card>
   );
 }

@@ -9,9 +9,9 @@ const text: Record<RegistrationStatus, string> = {
 
 export function TicketStatus({ status }: { status: RegistrationStatus }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <StatusBadge status={status} />
-      <span className="text-xs text-[#737373]">{text[status]}</span>
+      <span className="text-xs text-muted">{text[status]}</span>
     </div>
   );
 }
