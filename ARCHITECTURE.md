@@ -93,7 +93,7 @@ src/
 │  ├─ not-found.middleware.ts      # 404 { message: "Endpoint tidak ditemukan" }
 │  └─ error.middleware.ts          # Error handler multer/umum (status 400)
 ├─ routes/
-│  ├─ index.ts                     # Aggregator: mount auth/events/registrations di /api/v1
+│  ├─ index.ts                     # Aggregator: mount auth/events/registrations di /api
 │  ├─ auth.routes.ts
 │  ├─ event.routes.ts
 │  └─ registration.routes.ts
@@ -158,7 +158,7 @@ flowchart LR
         RSC["App Router / RSC + Client Components"]
     end
 
-    subgraph BE["Backend API (Express 5, /api/v1)"]
+    subgraph BE["Backend API (Express 5, /api)"]
         MW["Middleware: helmet, cors, json"]
         AUTH["verifyToken + requireRole"]
         CTRL["Controllers"]
@@ -192,14 +192,14 @@ flowchart LR
 
 ### Entry & bootstrap
 - `server.ts`: memanggil tes koneksi database (`db/index.ts`), keluar bila gagal, lalu `app.listen(env.port)`.
-- `app.ts`: `helmet()` → `cors()` → `express.json()` → router (`routes/index.ts` di bawah `/api/v1`) → **404 handler** → **error handler** (4 argumen) di akhir untuk menangani error multer/umum (status 400, format `{ message }`).
+- `app.ts`: `helmet()` → `cors()` → `express.json()` → router (`routes/index.ts` di bawah `/api`) → **404 handler** → **error handler** (4 argumen) di akhir untuk menangani error multer/umum (status 400, format `{ message }`).
 
 ### Routing
-`routes/index.ts` menggabungkan tiga router dan di-mount di bawah prefix `/api/v1`:
-- `auth.routes.ts` → `/api/v1/auth`
-- `event.routes.ts` → `/api/v1/events`
-- `registration.routes.ts` → `/api/v1/registrations`
-- `GET /api/v1/health` → endpoint health sederhana (didaftarkan langsung di `app.ts`).
+`routes/index.ts` menggabungkan tiga router dan di-mount di bawah prefix `/api`:
+- `auth.routes.ts` → `/api/auth`
+- `event.routes.ts` → `/api/events`
+- `registration.routes.ts` → `/api/registrations`
+- `GET /api/v1/health` → endpoint health sederhana (didaftarkan langsung di `app.ts`, di luar prefix router).
 
 ### Controllers & services
 Controller menangani validasi input (via zod), pengecekan kepemilikan, dan penyusunan respons. Query database, transaksi (`pool.getConnection()` + `BEGIN/COMMIT/ROLLBACK`), serta upload/hapus Cloudinary berada di `services/` (`auth.service.ts`, `event.service.ts`, `registration.service.ts`). Untuk alur yang butuh `SELECT ... FOR UPDATE` (pendaftaran event, perubahan status), pengecekan kepemilikan ikut berada di dalam transaksi service dan hasilnya dikembalikan sebagai union type yang dipetakan controller ke status code.
@@ -244,7 +244,7 @@ Next.js App Router (berbasis folder di `src/app`). Hampir semua halaman berinter
 
 ### API client
 `services/api.ts` menyediakan `api(path, options)`:
-- Base URL dari `NEXT_PUBLIC_API_URL` (fallback `http://localhost:8000/api/v1`).
+- Base URL dari `NEXT_PUBLIC_API_URL` (fallback `http://localhost:8000/api`).
 - Opsi `auth: true` menambahkan header `Authorization: Bearer <token>` (token dari `localStorage` key `gatix_token`).
 - Bila `body` bukan `FormData`, JSON di-encode; bila `FormData`, header `Content-Type` dibiarkan agar boundary diatur browser.
 - Respons non-OK → melempar `Error(message)`; 401 → token dihapus.
@@ -264,7 +264,7 @@ Semua pengambilan data terjadi di klien (`useEffect`) saat halaman dimuat; tidak
 
 ## 6. API Documentation
 
-Base URL: `${NEXT_PUBLIC_API_URL}` (default `http://localhost:8000/api/v1`). Semua endpoint berawalan `/api/v1`.
+Base URL: `${NEXT_PUBLIC_API_URL}` (default `http://localhost:8000/api`). Semua endpoint di bawah ini berawalan `/api`, kecuali health (`/api/v1/health`).
 Autentikasi: header `Authorization: Bearer <token>`. `Auth` = wajib login; `Role` = role yang diizinkan.
 
 ### Auth — `backend/src/routes/auth.routes.ts`
@@ -433,7 +433,7 @@ erDiagram
 `PORT`, `CORS_ORIGIN`, `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JWT_SECRET`, `JWT_EXPIRES_IN`.
 
 **Frontend** (`frontend/.env.local`, contoh di `frontend/.env.example`):
-`NEXT_PUBLIC_API_URL` (contoh: `http://localhost:8000/api/v1`).
+`NEXT_PUBLIC_API_URL` (contoh: `http://localhost:8000/api`).
 
 > 🔒 **Jangan menuliskan nilai rahasia** ke dokumentasi/repositori. `backend/.env.example` hanya berisi **placeholder** — nilai asli diisi di `backend/.env` (di-ignore git). Berdasarkan pemeriksaan git, `frontend/.env.local` **tidak** terlacak git (di-ignore `.env*`), sehingga `frontend/.env.example` juga **tidak** ikut ter-commit — environment baru perlu membuatnya manual.
 
@@ -457,7 +457,7 @@ npm run dev        # next dev
 ```
 Script lain: `build` (`next build`), `start` (`next start`), `lint` (`eslint`).
 
-> Catatan konfigurasi dev/prod: backend default `PORT=8000`; frontend default API URL `http://localhost:8000/api/v1`. Tidak ada konfigurasi khusus production lain (mis. reverse proxy) di repo — `Belum terverifikasi`.
+> Catatan konfigurasi dev/prod: backend default `PORT=8000`; frontend default API URL `http://localhost:8000/api`. Tidak ada konfigurasi khusus production lain (mis. reverse proxy) di repo — `Belum terverifikasi`.
 
 ---
 

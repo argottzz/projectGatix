@@ -1,6 +1,6 @@
 # GATIX API — Dokumentasi
 
-Base URL lokal: `http://localhost:8000/api/v1`
+Base URL lokal: `http://localhost:8000/api`
 
 Auth: JWT via header `Authorization: Bearer <token>`.
 

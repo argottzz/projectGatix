@@ -39,17 +39,17 @@
 Alur bisnis utama (dari sisi pengguna hingga data tersimpan):
 
 1. **Akuisisi & jelajah** — Tamu membuka `/`, mencari event lewat hero search, kategori, atau halaman `/events` (filter + paginasi). Data event dibaca dari tabel `events` (join `users` untuk nama organizer).
-2. **Registrasi akun** — Pengguna mendaftar di `/register`. Backend `POST /api/v1/auth/register` memvalidasi (zod), cek email unik, hash password (bcrypt, cost 10), menyimpan ke tabel `users` dengan `role = 'user'`, lalu mengembalikan JWT.
-3. **Login** — `POST /api/v1/auth/login` memverifikasi password, mengembalikan JWT (masa berlaku dari `JWT_EXPIRES_IN`). Token disimpan di `localStorage` browser dengan key `gatix_token`.
-4. **Pendaftaran event** — Dari `/events/[id]`, pengguna menekan "Daftar Sekarang". `POST /api/v1/registrations` menjalankan transaksi:
+2. **Registrasi akun** — Pengguna mendaftar di `/register`. Backend `POST /api/auth/register` memvalidasi (zod), cek email unik, hash password (bcrypt, cost 10), menyimpan ke tabel `users` dengan `role = 'user'`, lalu mengembalikan JWT.
+3. **Login** — `POST /api/auth/login` memverifikasi password, mengembalikan JWT (masa berlaku dari `JWT_EXPIRES_IN`). Token disimpan di `localStorage` browser dengan key `gatix_token`.
+4. **Pendaftaran event** — Dari `/events/[id]`, pengguna menekan "Daftar Sekarang". `POST /api/registrations` menjalankan transaksi:
    - kunci baris event (`SELECT ... FOR UPDATE`),
    - cek kuota (`COUNT` registrasi `pending`/`approved` < `quota`),
    - cek duplikasi (1 user 1 registrasi per event),
    - menentukan status: **gratis → `approved`**, **berbayar → `pending`**.
-5. **Pembayaran manual (event berbayar)** — Pengguna mengunggah bukti di `/my-tickets/[id]` via `PATCH /api/v1/registrations/:id/payment` (multipart, jpg/png ≤ 5 MB). File diunggah ke **Cloudinary**, URL & `public_id` disimpan di tabel `registrations`.
-6. **Verifikasi organizer** — Organizer membuka `/organizer/registrations`, melihat daftar peserta + bukti, lalu `PATCH /api/v1/registrations/:id/status` (`approved`/`cancelled`). Approve dicek terhadap kuota.
+5. **Pembayaran manual (event berbayar)** — Pengguna mengunggah bukti di `/my-tickets/[id]` via `PATCH /api/registrations/:id/payment` (multipart, jpg/png ≤ 5 MB). File diunggah ke **Cloudinary**, URL & `public_id` disimpan di tabel `registrations`.
+6. **Verifikasi organizer** — Organizer membuka `/organizer/registrations`, melihat daftar peserta + bukti, lalu `PATCH /api/registrations/:id/status` (`approved`/`cancelled`). Approve dicek terhadap kuota.
 7. **Tiket** — Pengguna melihat tiket di `/my-tickets` (filter status) & detail di `/my-tickets/[id]`, bisa membatalkan (`cancelled`) yang membebaskan kuota.
-8. **Menjadi organizer** — Dari `/organizer/profile`, `POST /api/v1/auth/become-organizer` mengubah `role` menjadi `organizer` dan menerbitkan token baru.
+8. **Menjadi organizer** — Dari `/organizer/profile`, `POST /api/auth/become-organizer` mengubah `role` menjadi `organizer` dan menerbitkan token baru.
 9. **Kelola event** — Organizer membuat/mengubah/menghapus event (banner ke Cloudinary). Menghapus event juga menghapus registrasi terkait dan aset Cloudinary-nya (`event.controller.ts`).
 
 **Bagaimana data diproses & disimpan:**
